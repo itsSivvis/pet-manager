@@ -1,0 +1,421 @@
+{
+  "app": {
+    "name": "Pet Manager"
+  },
+  "nav": {
+    "main": "Hauptnavigation",
+    "dashboard": "Übersicht",
+    "pets": "Tiere",
+    "settings": "Einstellungen",
+    "admin": "Administration",
+    "openMenu": "Menü öffnen",
+    "skipToContent": "Zum Inhalt springen"
+  },
+  "common": {
+    "add": "Hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "save": "Speichern",
+    "saved": "Gespeichert.",
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "back": "Zurück",
+    "retry": "Erneut versuchen",
+    "loading": "Wird geladen …",
+    "refreshing": "Wird aktualisiert …",
+    "yes": "Ja",
+    "no": "Nein",
+    "name": "Name",
+    "title": "Titel",
+    "type": "Art",
+    "date": "Datum",
+    "notes": "Notizen",
+    "amount": "Menge",
+    "unit": "Einheit",
+    "confirmDeleteTitle": "Eintrag löschen?",
+    "confirmDeleteText": "Das kann nicht rückgängig gemacht werden.",
+    "ageMonths_one": "{{count}} Monat",
+    "ageMonths_other": "{{count}} Monate",
+    "ageYears_one": "{{count}} Jahr",
+    "ageYears_other": "{{count}} Jahre"
+  },
+  "form": {
+    "required": "Pflichtfeld",
+    "invalid": "Bitte prüfe diesen Wert",
+    "none": "Keine Angabe",
+    "time": "Uhrzeit",
+    "addTime": "Uhrzeit hinzufügen",
+    "noTimes": "Noch keine Uhrzeiten"
+  },
+  "themes": {
+    "system": {
+      "name": "Automatisch",
+      "description": "Folgt deinem Gerät: hell oder dunkel"
+    },
+    "neutral-light": {
+      "name": "Neutral Hell",
+      "description": "Ruhig, minimalistisch, kontrastreich"
+    },
+    "neutral-dark": {
+      "name": "Neutral Dunkel",
+      "description": "Augenschonend am Abend"
+    },
+    "playful": {
+      "name": "Verspielt",
+      "description": "Bunt, rund und fröhlich"
+    },
+    "meadow": {
+      "name": "Wiese",
+      "description": "Der klassische Look in Petrol & Koralle"
+    }
+  },
+  "species": {
+    "dog": "Hund",
+    "cat": "Katze",
+    "rabbit": "Kaninchen",
+    "rodent": "Nagetier",
+    "bird": "Vogel",
+    "fish": "Fisch",
+    "reptile": "Reptil",
+    "horse": "Pferd",
+    "other": "Sonstiges"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "logout": "Abmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "displayName": "Dein Name",
+    "passwordHint": "Mindestens 10 Zeichen. Ein Satz aus mehreren Wörtern ist leicht zu merken.",
+    "noAccount": "Noch kein Konto? Registrieren",
+    "haveAccount": "Schon ein Konto? Anmelden",
+    "continueWithoutLogin": "Ohne Anmeldung fortfahren",
+    "title": {
+      "login": "Willkommen zurück",
+      "register": "Konto erstellen",
+      "setup": "Pet Manager einrichten"
+    },
+    "subtitle": {
+      "login": "Melde dich an, um deine Tiere zu sehen.",
+      "register": "Registriere dich, um eure Tiere gemeinsam zu verwalten.",
+      "setup": "Lege das erste Konto an. Es wird zum Administrator."
+    },
+    "submit": {
+      "login": "Anmelden",
+      "register": "Registrieren",
+      "setup": "Administrator-Konto anlegen"
+    }
+  },
+  "dashboard": {
+    "greetingMorning": "Guten Morgen {{name}}",
+    "greetingDay": "Hallo {{name}}",
+    "greetingEvening": "Guten Abend {{name}}",
+    "subtitle": "Das steht heute bei deinen Tieren an.",
+    "noPetsTitle": "Noch keine Tiere",
+    "noPetsText": "Lege dein erstes Tier an, um Gesundheit, Medikamente und Termine zu verwalten.",
+    "doses": "Medikamente",
+    "noDoses": "In den nächsten 24 Stunden ist nichts fällig.",
+    "markGiven": "Abhaken",
+    "given": "Gegeben",
+    "overdue": "überfällig",
+    "appointments": "Anstehende Termine",
+    "noAppointments": "Keine Termine in den nächsten 30 Tagen.",
+    "prevention": "Fällige Vorsorge",
+    "noPrevention": "In den nächsten zwei Wochen ist nichts fällig.",
+    "attention": "Braucht Aufmerksamkeit",
+    "allGood": "Alles gut – keine offenen Krankheiten oder knappen Bestände.",
+    "lowStock": "Bestand niedrig: {{name}}"
+  },
+  "pets": {
+    "title": "Tiere",
+    "add": "Tier hinzufügen",
+    "edit": "Tier bearbeiten",
+    "emptyTitle": "Noch keine Tiere",
+    "emptyText": "Lege dein erstes Tier an – das dauert nur einen Moment.",
+    "showArchived": "Archivierte Tiere anzeigen",
+    "noArchived": "Keine archivierten Tiere",
+    "archive": "Archivieren",
+    "unarchive": "Wiederherstellen",
+    "addPhoto": "Foto hinzufügen",
+    "changePhoto": "Foto ändern",
+    "removePhoto": "Entfernen",
+    "deleteTitle": "{{name}} löschen?",
+    "deleteText": "Alle Gesundheitseinträge, Medikamente, Termine und Krankheiten dieses Tieres werden endgültig gelöscht. Archivieren ist oft die bessere Wahl.",
+    "openIllnesses_one": "{{count}} offene Krankheit",
+    "openIllnesses_other": "{{count}} offene Krankheiten",
+    "sections": "Bereiche des Tieres",
+    "tabs": {
+      "overview": "Übersicht",
+      "health": "Gesundheit",
+      "medications": "Medikamente",
+      "appointments": "Termine",
+      "feeding": "Fütterung",
+      "prevention": "Vorsorge",
+      "illnesses": "Krankheiten"
+    },
+    "fields": {
+      "name": "Name",
+      "species": "Tierart",
+      "breed": "Rasse",
+      "sex": "Geschlecht",
+      "birthDate": "Geburtsdatum",
+      "color": "Farbe / Zeichnung",
+      "microchip": "Chipnummer",
+      "neutered": "Kastriert"
+    },
+    "sex": {
+      "female": "Weiblich",
+      "male": "Männlich",
+      "unknown": "Unbekannt"
+    }
+  },
+  "health": {
+    "title": "Gesundheitseinträge",
+    "add": "Eintrag hinzufügen",
+    "empty": "Noch keine Einträge. Halte hier Gewicht, Tierarztbesuche und Beobachtungen fest.",
+    "weight": "Gewicht",
+    "weightKg": "Gewicht (kg)",
+    "weightChart": "Gewichtsverlauf (kg)",
+    "weightChartEmpty": "Für das Diagramm werden mindestens zwei Gewichtseinträge benötigt.",
+    "types": {
+      "weight": "Gewicht",
+      "vet_visit": "Tierarztbesuch",
+      "vaccination": "Impfung",
+      "observation": "Beobachtung",
+      "other": "Sonstiges"
+    }
+  },
+  "medications": {
+    "title": "Medikamente",
+    "add": "Medikament hinzufügen",
+    "empty": "Keine Medikamente. Lege eines an, um Erinnerungen zu erhalten und den Bestand zu verfolgen.",
+    "dose": "Dosis",
+    "times": "Uhrzeiten",
+    "intervalDays": "Alle … Tage",
+    "intervalHint": "1 = täglich, 7 = wöchentlich",
+    "reminders": "Push-Erinnerungen",
+    "remindersOff": "Erinnerungen sind aus",
+    "startDate": "Beginn",
+    "endDate": "Ende",
+    "stock": "Bestand",
+    "lowStockThreshold": "Warnen ab Bestand von",
+    "unitHint": "z. B. Tablette, ml, Tropfen",
+    "catalogHint": "Aus dem Katalog wählen oder Namen eingeben",
+    "daily": "täglich",
+    "everyNDays_one": "jeden Tag",
+    "everyNDays_other": "alle {{count}} Tage",
+    "stockLeft": "noch {{amount}} {{unit}}",
+    "period": "Ab {{start}}",
+    "ended": "Beendet",
+    "giveNow": "Als gegeben markieren",
+    "showHistory": "Verlauf",
+    "hideHistory": "Verlauf ausblenden",
+    "noDoses": "Noch keine Gaben erfasst.",
+    "undoDose": "Rückgängig (Bestand wird wiederhergestellt)"
+  },
+  "appointments": {
+    "title": "Termine",
+    "add": "Termin hinzufügen",
+    "empty": "Keine Termine.",
+    "startsAt": "Datum & Uhrzeit",
+    "location": "Ort",
+    "reminder": "Erinnerung",
+    "done": "Erledigt",
+    "remind": {
+      "30m": "30 Minuten vorher",
+      "1h": "1 Stunde vorher",
+      "2h": "2 Stunden vorher",
+      "1d": "1 Tag vorher",
+      "2d": "2 Tage vorher"
+    }
+  },
+  "feeding": {
+    "title": "Futterplan",
+    "add": "Mahlzeit hinzufügen",
+    "empty": "Noch kein Futterplan.",
+    "food": "Futter",
+    "times": "Fütterungszeiten",
+    "perMeal": "pro Mahlzeit",
+    "catalogHint": "Aus dem Futterkatalog wählen oder Namen eingeben",
+    "unitHint": "z. B. g, Becher, Stück"
+  },
+  "prevention": {
+    "title": "Vorsorge",
+    "add": "Vorsorge hinzufügen",
+    "empty": "Halte hier Entwurmung, Floh- und Zeckenschutz und Impfungen fest.",
+    "product": "Produkt",
+    "lastDate": "Zuletzt am",
+    "intervalDays": "Wiederholen alle … Tage",
+    "lastOn": "Zuletzt: {{date}}",
+    "dueOn": "Fällig am {{date}} ({{relative}})",
+    "doneToday": "Heute erledigt",
+    "types": {
+      "deworming": "Entwurmung",
+      "flea_tick": "Floh & Zecke",
+      "vaccination": "Impfung",
+      "dental": "Zahnpflege",
+      "grooming": "Fellpflege",
+      "other": "Sonstiges"
+    },
+    "status": {
+      "overdue": "Überfällig",
+      "due_soon": "Bald fällig",
+      "ok": "Aktuell",
+      "unknown": "Kein Intervall"
+    }
+  },
+  "illness": {
+    "title": "Krankheiten",
+    "add": "Krankheit hinzufügen",
+    "edit": "Krankheit bearbeiten",
+    "empty": "Keine Krankheiten erfasst – prima!",
+    "statusLabel": "Status",
+    "startedOn": "Begonnen am",
+    "endedOn": "Beendet am",
+    "period": "Zeitraum",
+    "since": "seit {{date}}",
+    "diagnosis": "Diagnose",
+    "openTimeline": "Verlauf öffnen",
+    "backToList": "Alle Krankheiten",
+    "entries": "Verlauf",
+    "noEntries": "Noch keine Einträge. Dokumentiere Symptome und Behandlung Tag für Tag.",
+    "addEntry": "Eintrag hinzufügen",
+    "editEntry": "Eintrag bearbeiten",
+    "duplicate": "Für heute duplizieren",
+    "duplicateLatest": "Wie letzter Eintrag",
+    "severity": "Schweregrad",
+    "severityScale": "Schweregrad (1–5)",
+    "severityValue": "Schweregrad {{value}} von 5",
+    "temperature": "Temperatur (°C)",
+    "symptoms": "Symptome",
+    "treatment": "Behandlung",
+    "status": {
+      "active": "Akut",
+      "chronic": "Chronisch",
+      "resolved": "Abgeschlossen"
+    }
+  },
+  "pdf": {
+    "export": "PDF-Export",
+    "preview": "PDF-Vorschau",
+    "download": "PDF herunterladen",
+    "failed": "Das PDF konnte nicht erstellt werden.",
+    "pet": "Tier",
+    "generated": "erstellt am {{date}}"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "theme": "Design",
+    "appearance": "Erscheinungsbild",
+    "appearanceHint": "Deine Auswahl wird auf diesem Gerät gespeichert.",
+    "language": "Sprache",
+    "languageHint": "Fehlt eine Übersetzung, wird Englisch verwendet.",
+    "profile": "Profil",
+    "changePassword": "Passwort ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "passwordChanged": "Passwort geändert.",
+    "about": "Über",
+    "license": "Open Source unter der MIT-Lizenz",
+    "sourceCode": "Quellcode"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Einstellungen für diese Pet-Manager-Instanz.",
+    "access": {
+      "title": "Zugang & Sicherheit",
+      "requireLogin": "Anmeldung erforderlich",
+      "howItWorksTitle": "Was passiert ohne Anmeldung?",
+      "howItWorks": "Ist die Anmeldepflicht aus, kann jede Person, die diese Instanz erreicht, alle Tiere und Einträge ohne Konto sehen und ändern. Der Administrationsbereich erfordert immer eine Administrator-Anmeldung. Schalte die Pflicht nur in einem privaten Netz aus, dem du vollständig vertraust.",
+      "envHint": "Das Abschalten der Anmeldepflicht ist auf diesem Server gesperrt. Um es zu erlauben, muss der Server gestartet werden mit",
+      "warningTitle": "Anmeldung ist derzeit NICHT erforderlich",
+      "warning": "Jede Person, die diese Instanz erreicht, hat vollen Zugriff auf alle Daten. Nutze diesen Modus niemals auf einer Instanz, die aus dem Internet erreichbar ist.",
+      "allowRegistration": "Neue Registrierungen erlauben",
+      "allowRegistrationHint": "Wenn aus, können sich nur bestehende Konten anmelden. Neue Konten sind immer normale Nutzer."
+    },
+    "ntfy": {
+      "title": "Push-Benachrichtigungen (ntfy)",
+      "description": "Erinnerungen an Medikamente, Termine, Vorsorge und knappe Bestände werden über ntfy verschickt – einen kostenlosen, selbst hostbaren Push-Dienst.",
+      "enabled": "Erinnerungen senden",
+      "url": "ntfy-Server-URL",
+      "urlHint": "z. B. https://ntfy.sh oder dein eigener Server",
+      "topic": "Topic",
+      "topicHint": "Abonniere dieses Topic in der ntfy-App. Wähle auf öffentlichen Servern einen schwer zu erratenden Namen.",
+      "token": "Zugriffstoken (optional)",
+      "tokenHint": "Nur für geschützte Topics nötig.",
+      "tokenStored": "Ein Token ist gespeichert. Leer lassen, um es zu behalten, oder ein neues eingeben.",
+      "language": "Sprache der Benachrichtigungen",
+      "languageDefault": "Server-Standard",
+      "test": "Testbenachrichtigung senden",
+      "testSent": "Testbenachrichtigung gesendet."
+    },
+    "users": {
+      "title": "Benutzer",
+      "role": "Rolle",
+      "since": "seit {{date}}",
+      "roles": {
+        "user": "Nutzer",
+        "admin": "Admin"
+      },
+      "deleteTitle": "{{name}} löschen?",
+      "deleteText": "Das Konto wird entfernt. Tiere und Einträge sind gemeinsam und bleiben erhalten."
+    },
+    "catalog": {
+      "title": "Katalog",
+      "description": "Hier gepflegte Futtersorten und Medikamente lassen sich in den Formularen aller Tiere schnell auswählen.",
+      "foods": "Futter",
+      "medications": "Medikamente",
+      "brand": "Marke",
+      "kcal": "kcal / 100 g",
+      "ingredient": "Wirkstoff",
+      "defaultDose": "Standarddosis",
+      "deleteText": "Bestehende Einträge, die diesen Eintrag nutzen, behalten ihre Werte."
+    }
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "text": "Diese Seite ist wohl ausgebüxt."
+  },
+  "errors": {
+    "UNKNOWN": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "NETWORK_ERROR": "Der Server ist nicht erreichbar. Prüfe deine Verbindung.",
+    "INTERNAL_ERROR": "Auf dem Server ist ein Fehler aufgetreten. Bitte versuche es später erneut.",
+    "NOT_FOUND": "Nicht gefunden.",
+    "VALIDATION_FAILED": "Einige Angaben sind ungültig. Bitte prüfe das Formular.",
+    "INVALID_JSON": "Die Anfrage war fehlerhaft.",
+    "INVALID_REFERENCE": "Ein verknüpfter Eintrag existiert nicht mehr.",
+    "PAYLOAD_TOO_LARGE": "Die Anfrage ist zu groß.",
+    "RATE_LIMITED": "Zu viele Versuche. Bitte warte ein paar Minuten.",
+    "AUTH_REQUIRED": "Bitte melde dich an.",
+    "AUTH_INVALID_TOKEN": "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.",
+    "AUTH_INVALID_CREDENTIALS": "E-Mail oder Passwort ist falsch.",
+    "AUTH_WRONG_PASSWORD": "Das aktuelle Passwort ist falsch.",
+    "FORBIDDEN": "Dafür fehlen dir die Rechte.",
+    "REGISTRATION_CLOSED": "Die Registrierung ist geschlossen. Bitte eine Administratorin oder einen Administrator um Zugang.",
+    "EMAIL_TAKEN": "Diese E-Mail-Adresse ist bereits registriert.",
+    "PASSWORD_TOO_SHORT": "Das Passwort muss mindestens 10 Zeichen lang sein.",
+    "PASSWORD_TOO_LONG": "Das Passwort ist zu lang (max. 72 Byte).",
+    "PASSWORD_TOO_WEAK": "Dieses Passwort ist zu leicht zu erraten.",
+    "PASSWORD_EQUALS_EMAIL": "Das Passwort darf nicht deine E-Mail-Adresse sein.",
+    "ANONYMOUS_MODE_NOT_ALLOWED": "Das Abschalten der Anmeldepflicht ist auf diesem Server gesperrt (ALLOW_ANONYMOUS_MODE).",
+    "NTFY_NOT_CONFIGURED": "Lege zuerst einen ntfy-Server und ein Topic fest.",
+    "NTFY_FAILED": "Der ntfy-Server hat die Benachrichtigung nicht angenommen.",
+    "CANNOT_DEMOTE_SELF": "Du kannst dir die Administratorrechte nicht selbst entziehen.",
+    "CANNOT_DELETE_SELF": "Du kannst dein eigenes Konto nicht löschen.",
+    "UPLOAD_TOO_LARGE": "Das Bild ist zu groß.",
+    "UPLOAD_INVALID": "Der Upload ist fehlgeschlagen.",
+    "UPLOAD_MISSING": "Bitte wähle ein Bild aus.",
+    "UPLOAD_UNSUPPORTED_TYPE": "Nur JPEG-, PNG-, WebP- und GIF-Bilder werden unterstützt.",
+    "PET_NOT_FOUND": "Dieses Tier existiert nicht (mehr).",
+    "HEALTH_ENTRY_NOT_FOUND": "Dieser Eintrag existiert nicht (mehr).",
+    "MEDICATION_NOT_FOUND": "Dieses Medikament existiert nicht (mehr).",
+    "DOSE_NOT_FOUND": "Diese Gabe existiert nicht (mehr).",
+    "APPOINTMENT_NOT_FOUND": "Dieser Termin existiert nicht (mehr).",
+    "FEEDING_PLAN_NOT_FOUND": "Diese Mahlzeit existiert nicht (mehr).",
+    "PREVENTION_ITEM_NOT_FOUND": "Dieser Vorsorge-Eintrag existiert nicht (mehr).",
+    "ILLNESS_NOT_FOUND": "Diese Krankheit existiert nicht (mehr).",
+    "ILLNESS_ENTRY_NOT_FOUND": "Dieser Eintrag existiert nicht (mehr).",
+    "USER_NOT_FOUND": "Dieser Benutzer existiert nicht (mehr).",
+    "CATALOG_ITEM_NOT_FOUND": "Dieser Katalogeintrag existiert nicht (mehr)."
+  }
+}

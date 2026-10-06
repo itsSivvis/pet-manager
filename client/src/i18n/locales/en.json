@@ -1,0 +1,421 @@
+{
+  "app": {
+    "name": "Pet Manager"
+  },
+  "nav": {
+    "main": "Main navigation",
+    "dashboard": "Dashboard",
+    "pets": "Pets",
+    "settings": "Settings",
+    "admin": "Administration",
+    "openMenu": "Open menu",
+    "skipToContent": "Skip to content"
+  },
+  "common": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "saved": "Saved.",
+    "cancel": "Cancel",
+    "close": "Close",
+    "back": "Back",
+    "retry": "Retry",
+    "loading": "Loading…",
+    "refreshing": "Refreshing…",
+    "yes": "Yes",
+    "no": "No",
+    "name": "Name",
+    "title": "Title",
+    "type": "Type",
+    "date": "Date",
+    "notes": "Notes",
+    "amount": "Amount",
+    "unit": "Unit",
+    "confirmDeleteTitle": "Delete this entry?",
+    "confirmDeleteText": "This cannot be undone.",
+    "ageMonths_one": "{{count}} month",
+    "ageMonths_other": "{{count}} months",
+    "ageYears_one": "{{count}} year",
+    "ageYears_other": "{{count}} years"
+  },
+  "form": {
+    "required": "Required",
+    "invalid": "Please check this value",
+    "none": "None",
+    "time": "Time",
+    "addTime": "Add time",
+    "noTimes": "No times added yet"
+  },
+  "themes": {
+    "system": {
+      "name": "Automatic",
+      "description": "Follows your device: light or dark"
+    },
+    "neutral-light": {
+      "name": "Neutral Light",
+      "description": "Calm, minimal, high contrast"
+    },
+    "neutral-dark": {
+      "name": "Neutral Dark",
+      "description": "Easy on the eyes at night"
+    },
+    "playful": {
+      "name": "Playful",
+      "description": "Colorful, rounded and cheerful"
+    },
+    "meadow": {
+      "name": "Meadow",
+      "description": "The classic teal & coral look"
+    }
+  },
+  "species": {
+    "dog": "Dog",
+    "cat": "Cat",
+    "rabbit": "Rabbit",
+    "rodent": "Rodent",
+    "bird": "Bird",
+    "fish": "Fish",
+    "reptile": "Reptile",
+    "horse": "Horse",
+    "other": "Other"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "email": "E-mail",
+    "password": "Password",
+    "displayName": "Your name",
+    "passwordHint": "At least 10 characters. A passphrase of several words is easy to remember.",
+    "noAccount": "No account yet? Register",
+    "haveAccount": "Already have an account? Log in",
+    "continueWithoutLogin": "Continue without logging in",
+    "title": {
+      "login": "Welcome back",
+      "register": "Create an account",
+      "setup": "Set up Pet Manager"
+    },
+    "subtitle": {
+      "login": "Log in to see your pets.",
+      "register": "Register to manage your pets together.",
+      "setup": "Create the first account. It will become the administrator."
+    },
+    "submit": {
+      "login": "Log in",
+      "register": "Register",
+      "setup": "Create administrator account"
+    }
+  },
+  "dashboard": {
+    "greetingMorning": "Good morning {{name}}",
+    "greetingDay": "Hello {{name}}",
+    "greetingEvening": "Good evening {{name}}",
+    "subtitle": "Here is what's up with your pets today.",
+    "noPetsTitle": "No pets yet",
+    "noPetsText": "Add your first pet to start tracking health, medication and appointments.",
+    "doses": "Medication",
+    "noDoses": "No doses due in the next 24 hours.",
+    "markGiven": "Mark given",
+    "given": "Given",
+    "overdue": "overdue",
+    "appointments": "Upcoming appointments",
+    "noAppointments": "No appointments in the next 30 days.",
+    "prevention": "Prevention due",
+    "noPrevention": "Nothing due in the next two weeks.",
+    "attention": "Needs attention",
+    "allGood": "All good – no open illnesses or low stock.",
+    "lowStock": "Low stock: {{name}}"
+  },
+  "pets": {
+    "title": "Pets",
+    "add": "Add pet",
+    "edit": "Edit pet",
+    "emptyTitle": "No pets yet",
+    "emptyText": "Add your first pet – it only takes a moment.",
+    "showArchived": "Show archived pets",
+    "noArchived": "No archived pets",
+    "archive": "Archive",
+    "unarchive": "Restore",
+    "addPhoto": "Add photo",
+    "changePhoto": "Change photo",
+    "removePhoto": "Remove",
+    "deleteTitle": "Delete {{name}}?",
+    "deleteText": "All health records, medications, appointments and illnesses of this pet will be deleted permanently. Consider archiving instead.",
+    "openIllnesses_one": "{{count}} open illness",
+    "openIllnesses_other": "{{count}} open illnesses",
+    "sections": "Pet sections",
+    "tabs": {
+      "overview": "Overview",
+      "health": "Health",
+      "medications": "Medication",
+      "appointments": "Appointments",
+      "feeding": "Feeding",
+      "prevention": "Prevention",
+      "illnesses": "Illnesses"
+    },
+    "fields": {
+      "name": "Name",
+      "species": "Species",
+      "breed": "Breed",
+      "sex": "Sex",
+      "birthDate": "Date of birth",
+      "color": "Color / markings",
+      "microchip": "Microchip number",
+      "neutered": "Neutered / spayed"
+    },
+    "sex": {
+      "female": "Female",
+      "male": "Male",
+      "unknown": "Unknown"
+    }
+  },
+  "health": {
+    "title": "Health records",
+    "add": "Add record",
+    "empty": "No health records yet. Track weight, vet visits and observations here.",
+    "weight": "Weight",
+    "weightKg": "Weight (kg)",
+    "weightChart": "Weight history (kg)",
+    "weightChartEmpty": "Add at least two weight records to see the chart.",
+    "types": {
+      "weight": "Weight",
+      "vet_visit": "Vet visit",
+      "vaccination": "Vaccination",
+      "observation": "Observation",
+      "other": "Other"
+    }
+  },
+  "medications": {
+    "title": "Medication",
+    "add": "Add medication",
+    "empty": "No medication. Add one to get reminders and track stock.",
+    "dose": "Dose",
+    "times": "Times of day",
+    "intervalDays": "Every … days",
+    "intervalHint": "1 = daily, 7 = weekly",
+    "reminders": "Push reminders",
+    "remindersOff": "Reminders are off",
+    "startDate": "Start date",
+    "endDate": "End date",
+    "stock": "Stock",
+    "lowStockThreshold": "Warn when stock is at or below",
+    "unitHint": "e.g. tablet, ml, drops",
+    "catalogHint": "Pick from the catalog or type a name",
+    "daily": "daily",
+    "everyNDays_one": "every day",
+    "everyNDays_other": "every {{count}} days",
+    "stockLeft": "{{amount}} {{unit}} left",
+    "period": "From {{start}}",
+    "ended": "Ended",
+    "giveNow": "Mark as given",
+    "showHistory": "History",
+    "hideHistory": "Hide history",
+    "noDoses": "No doses recorded yet.",
+    "undoDose": "Undo (restores stock)"
+  },
+  "appointments": {
+    "title": "Appointments",
+    "add": "Add appointment",
+    "empty": "No appointments.",
+    "startsAt": "Date & time",
+    "location": "Location",
+    "reminder": "Reminder",
+    "done": "Done",
+    "remind": {
+      "30m": "30 minutes before",
+      "1h": "1 hour before",
+      "2h": "2 hours before",
+      "1d": "1 day before",
+      "2d": "2 days before"
+    }
+  },
+  "feeding": {
+    "title": "Feeding plan",
+    "add": "Add meal",
+    "empty": "No feeding plan yet.",
+    "food": "Food",
+    "times": "Feeding times",
+    "perMeal": "per meal",
+    "catalogHint": "Pick from the food catalog or type a name",
+    "unitHint": "e.g. g, cups, pieces"
+  },
+  "prevention": {
+    "title": "Prevention",
+    "add": "Add prevention",
+    "empty": "Track deworming, flea & tick treatment and vaccinations here.",
+    "product": "Product",
+    "lastDate": "Last done on",
+    "intervalDays": "Repeat every … days",
+    "lastOn": "Last: {{date}}",
+    "dueOn": "Due {{date}} ({{relative}})",
+    "doneToday": "Done today",
+    "types": {
+      "deworming": "Deworming",
+      "flea_tick": "Flea & tick",
+      "vaccination": "Vaccination",
+      "dental": "Dental care",
+      "grooming": "Grooming",
+      "other": "Other"
+    },
+    "status": {
+      "overdue": "Overdue",
+      "due_soon": "Due soon",
+      "ok": "Up to date",
+      "unknown": "No schedule"
+    }
+  },
+  "illness": {
+    "title": "Illnesses",
+    "add": "Add illness",
+    "edit": "Edit illness",
+    "empty": "No illnesses recorded – great!",
+    "statusLabel": "Status",
+    "startedOn": "Started on",
+    "endedOn": "Ended on",
+    "period": "Period",
+    "since": "since {{date}}",
+    "diagnosis": "Diagnosis",
+    "openTimeline": "Open timeline",
+    "backToList": "All illnesses",
+    "entries": "Progress",
+    "noEntries": "No entries yet. Document symptoms and treatment day by day.",
+    "addEntry": "Add entry",
+    "editEntry": "Edit entry",
+    "duplicate": "Duplicate for today",
+    "duplicateLatest": "Same as last entry",
+    "severity": "Severity",
+    "severityScale": "Severity (1–5)",
+    "severityValue": "Severity {{value}} of 5",
+    "temperature": "Temperature (°C)",
+    "symptoms": "Symptoms",
+    "treatment": "Treatment",
+    "status": {
+      "active": "Active",
+      "chronic": "Chronic",
+      "resolved": "Resolved"
+    }
+  },
+  "pdf": {
+    "export": "PDF export",
+    "preview": "PDF preview",
+    "download": "Download PDF",
+    "failed": "The PDF could not be created.",
+    "pet": "Pet",
+    "generated": "created on {{date}}"
+  },
+  "settings": {
+    "title": "Settings",
+    "theme": "Theme",
+    "appearance": "Appearance",
+    "appearanceHint": "Your choice is saved on this device.",
+    "language": "Language",
+    "languageHint": "English is used whenever a translation is missing.",
+    "profile": "Profile",
+    "changePassword": "Change password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "passwordChanged": "Password changed.",
+    "about": "About",
+    "license": "Open source under the MIT License",
+    "sourceCode": "Source code"
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Settings for this Pet Manager instance.",
+    "access": {
+      "title": "Access & security",
+      "requireLogin": "Require login",
+      "howItWorksTitle": "What happens without a login?",
+      "howItWorks": "When the login requirement is off, anyone who can reach this instance can see and change all pets and records without an account. The administration area always requires an administrator login. Only turn this off on a private network you fully trust.",
+      "envHint": "Turning the login requirement off is disabled on this server. To allow it, the server must be started with",
+      "warningTitle": "Login is currently NOT required",
+      "warning": "Everyone who can reach this instance has full access to all data. Never use this mode on an instance that is reachable from the internet.",
+      "allowRegistration": "Allow new registrations",
+      "allowRegistrationHint": "When off, only the existing accounts can log in. New accounts are always regular users."
+    },
+    "ntfy": {
+      "title": "Push notifications (ntfy)",
+      "description": "Reminders for medication, appointments, prevention and low stock are sent via ntfy – a free, self-hostable push service.",
+      "enabled": "Send reminders",
+      "url": "ntfy server URL",
+      "urlHint": "e.g. https://ntfy.sh or your own server",
+      "topic": "Topic",
+      "topicHint": "Subscribe to this topic in the ntfy app. Use a hard-to-guess name on public servers.",
+      "token": "Access token (optional)",
+      "tokenHint": "Only needed for protected topics.",
+      "tokenStored": "A token is stored. Leave empty to keep it, or enter a new one.",
+      "language": "Notification language",
+      "languageDefault": "Server default",
+      "test": "Send test notification",
+      "testSent": "Test notification sent."
+    },
+    "users": {
+      "title": "Users",
+      "role": "Role",
+      "since": "since {{date}}",
+      "roles": {
+        "user": "User",
+        "admin": "Admin"
+      },
+      "deleteTitle": "Delete {{name}}?",
+      "deleteText": "The account will be removed. Pets and records are shared and stay available."
+    },
+    "catalog": {
+      "title": "Catalog",
+      "description": "Foods and medications listed here can be picked quickly in all pets' forms.",
+      "foods": "Foods",
+      "medications": "Medications",
+      "brand": "Brand",
+      "kcal": "kcal / 100 g",
+      "ingredient": "Active ingredient",
+      "defaultDose": "Default dose",
+      "deleteText": "Existing entries that use this item keep their values."
+    }
+  },
+  "notFound": {
+    "title": "Page not found",
+    "text": "This page has wandered off."
+  },
+  "errors": {
+    "UNKNOWN": "Something went wrong. Please try again.",
+    "NETWORK_ERROR": "The server cannot be reached. Check your connection.",
+    "INTERNAL_ERROR": "The server ran into a problem. Please try again later.",
+    "NOT_FOUND": "Not found.",
+    "VALIDATION_FAILED": "Some values are invalid. Please check the form.",
+    "INVALID_JSON": "The request was malformed.",
+    "INVALID_REFERENCE": "A referenced item no longer exists.",
+    "PAYLOAD_TOO_LARGE": "The request is too large.",
+    "RATE_LIMITED": "Too many attempts. Please wait a few minutes.",
+    "AUTH_REQUIRED": "Please log in.",
+    "AUTH_INVALID_TOKEN": "Your session has expired. Please log in again.",
+    "AUTH_INVALID_CREDENTIALS": "E-mail or password is incorrect.",
+    "AUTH_WRONG_PASSWORD": "The current password is incorrect.",
+    "FORBIDDEN": "You are not allowed to do this.",
+    "REGISTRATION_CLOSED": "Registration is closed. Ask an administrator for access.",
+    "EMAIL_TAKEN": "This e-mail address is already registered.",
+    "PASSWORD_TOO_SHORT": "The password must be at least 10 characters long.",
+    "PASSWORD_TOO_LONG": "The password is too long (max. 72 bytes).",
+    "PASSWORD_TOO_WEAK": "This password is too easy to guess.",
+    "PASSWORD_EQUALS_EMAIL": "The password must not be your e-mail address.",
+    "ANONYMOUS_MODE_NOT_ALLOWED": "Turning off the login requirement is disabled on this server (ALLOW_ANONYMOUS_MODE).",
+    "NTFY_NOT_CONFIGURED": "Configure an ntfy server and topic first.",
+    "NTFY_FAILED": "The ntfy server did not accept the notification.",
+    "CANNOT_DEMOTE_SELF": "You cannot remove your own administrator rights.",
+    "CANNOT_DELETE_SELF": "You cannot delete your own account.",
+    "UPLOAD_TOO_LARGE": "The image is too large.",
+    "UPLOAD_INVALID": "The upload failed.",
+    "UPLOAD_MISSING": "Please choose an image.",
+    "UPLOAD_UNSUPPORTED_TYPE": "Only JPEG, PNG, WebP and GIF images are supported.",
+    "PET_NOT_FOUND": "This pet does not exist (anymore).",
+    "HEALTH_ENTRY_NOT_FOUND": "This record does not exist (anymore).",
+    "MEDICATION_NOT_FOUND": "This medication does not exist (anymore).",
+    "DOSE_NOT_FOUND": "This dose does not exist (anymore).",
+    "APPOINTMENT_NOT_FOUND": "This appointment does not exist (anymore).",
+    "FEEDING_PLAN_NOT_FOUND": "This meal does not exist (anymore).",
+    "PREVENTION_ITEM_NOT_FOUND": "This prevention item does not exist (anymore).",
+    "ILLNESS_NOT_FOUND": "This illness does not exist (anymore).",
+    "ILLNESS_ENTRY_NOT_FOUND": "This entry does not exist (anymore).",
+    "USER_NOT_FOUND": "This user does not exist (anymore).",
+    "CATALOG_ITEM_NOT_FOUND": "This catalog item does not exist (anymore)."
+  }
+}
