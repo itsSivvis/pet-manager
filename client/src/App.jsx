@@ -5,6 +5,7 @@ import Box from '@mui/material/Box';
 import CircularProgress from '@mui/material/CircularProgress';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from './auth/AuthProvider.jsx';
+import { useErrorMessage } from './lib/useErrorMessage.js';
 import Layout from './components/Layout.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
@@ -38,13 +39,13 @@ function RequireAuth({ children, admin = false }) {
 }
 
 export default function App() {
-  const { t } = useTranslation();
+  const errorMessage = useErrorMessage();
   const auth = useAuth();
   if (auth.loading) return <Loading />;
   if (auth.error && !auth.status) {
     return (
       <Box sx={{ p: 3 }}>
-        <Alert severity="error">{t('errors.NETWORK_ERROR')}</Alert>
+        <Alert severity="error">{errorMessage(auth.error)}</Alert>
       </Box>
     );
   }

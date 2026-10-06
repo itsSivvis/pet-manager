@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router';
 import { useQueryClient } from '@tanstack/react-query';
 import Box from '@mui/material/Box';
@@ -33,6 +33,7 @@ export default function PetList() {
   const [archived, setArchived] = useState(false);
   const query = usePets(archived);
   const creating = params.get('new') === '1';
+  const createdId = useRef(null);
 
   const addButton = (
     <Button variant="contained" startIcon={<AddIcon />} onClick={() => setParams({ new: '1' })}>
@@ -130,11 +131,16 @@ export default function PetList() {
           open
           title={t('pets.add')}
           fields={petFields(t)}
-          onClose={() => setParams({})}
+          onClose={() => {
+            // Navigate once, after the dialog closed: to the new pet or back to the list.
+            if (createdId.current) navigate(`/pets/${createdId.current}`, { replace: true });
+            else setParams({});
+            createdId.current = null;
+          }}
           onSubmit={async (values) => {
             const pet = await post('/pets', values);
             await queryClient.invalidateQueries();
-            navigate(`/pets/${pet.id}`);
+            createdId.current = pet.id;
           }}
         />
       )}
