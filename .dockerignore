@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/dev-dist
+**/coverage
+.git
+.github
+docs
+e2e
+playwright-report
+test-results
+server/uploads
+server/test
+**/*.test.js
+.env
+.env.*
+*.md

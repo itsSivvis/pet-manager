@@ -1,0 +1,32 @@
+# Development: only PostgreSQL in Docker, app runs locally with hot reload.
+#   docker compose -f docker-compose.dev.yml up -d
+#   npm install && npm run db:seed && npm run dev
+name: pet-manager-dev
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: petmanager
+      POSTGRES_PASSWORD: petmanager # local development only
+      POSTGRES_DB: petmanager
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - dev-db-data:/var/lib/postgresql/data
+      - ./scripts/dev-init-test-db.sql:/docker-entrypoint-initdb.d/10-test-db.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U petmanager']
+      interval: 5s
+      retries: 10
+
+  # Optional local ntfy server to test push reminders: http://localhost:8080
+  ntfy:
+    image: binwiederhier/ntfy
+    command: serve
+    profiles: ['ntfy']
+    ports:
+      - '127.0.0.1:8080:80'
+
+volumes:
+  dev-db-data:
