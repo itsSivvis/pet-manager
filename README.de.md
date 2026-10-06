@@ -110,7 +110,7 @@ ntfy, Anmeldepflicht und Registrierung werden in der Web-Oberfläche unter **Adm
 | `REMINDERS_ENABLED`             | `true`                                                       | Erinnerungs-Scheduler abschalten (z. B. auf weiteren Replikas).                                                                         |
 | `REMINDER_INTERVAL_SECONDS`     | `60`                                                         | Prüfintervall für Erinnerungen.                                                                                                         |
 | `ALLOW_ANONYMOUS_MODE`          | `false`                                                      | ⚠️ Erlaubt einem Admin, die Anmeldepflicht abzuschalten – siehe [Sicherheit](#sicherheit).                                              |
-| `PET_MANAGER_IMAGE`             | `ghcr.io/itssivvis/pet-manager:latest`                           | Von Compose verwendetes Image.                                                                                                          |
+| `PET_MANAGER_IMAGE`             | `ghcr.io/itssivvis/pet-manager:latest`                       | Von Compose verwendetes Image.                                                                                                          |
 
 ### Push-Benachrichtigungen (ntfy)
 

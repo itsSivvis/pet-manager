@@ -110,7 +110,7 @@ ntfy, the login requirement and registration are configured in the web UI under 
 | `REMINDERS_ENABLED`             | `true`                                                       | Turn the reminder scheduler off (e.g. on additional replicas).                                                                       |
 | `REMINDER_INTERVAL_SECONDS`     | `60`                                                         | How often reminders are checked.                                                                                                     |
 | `ALLOW_ANONYMOUS_MODE`          | `false`                                                      | ⚠️ Allows an admin to switch off the login requirement – see [Security](#security).                                                  |
-| `PET_MANAGER_IMAGE`             | `ghcr.io/itssivvis/pet-manager:latest`                           | Image used by Compose.                                                                                                               |
+| `PET_MANAGER_IMAGE`             | `ghcr.io/itssivvis/pet-manager:latest`                       | Image used by Compose.                                                                                                               |
 
 ### Push notifications (ntfy)
 
