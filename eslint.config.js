@@ -5,7 +5,14 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 
 export default [
   {
-    ignores: ['**/node_modules', '**/dist', '**/dev-dist', '**/coverage', 'playwright-report', 'test-results'],
+    ignores: [
+      '**/node_modules',
+      '**/dist',
+      '**/dev-dist',
+      '**/coverage',
+      'playwright-report',
+      'test-results',
+    ],
   },
   js.configs.recommended,
   {
@@ -16,7 +23,10 @@ export default [
       globals: { ...globals.node },
     },
     rules: {
-      'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      'no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' },
+      ],
     },
   },
   {

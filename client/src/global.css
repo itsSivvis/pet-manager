@@ -1,0 +1,15 @@
+/* Only non-themable basics live here; everything else comes from the MUI theme. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 2000;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: Canvas;
+  color: CanvasText;
+  transition: top 120ms ease;
+}
+.skip-link:focus {
+  top: 8px;
+}
