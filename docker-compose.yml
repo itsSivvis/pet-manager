@@ -7,7 +7,7 @@ name: pet-manager
 
 services:
   app:
-    image: ${PET_MANAGER_IMAGE:-ghcr.io/OWNER/pet-manager:latest}
+    image: ${PET_MANAGER_IMAGE:-ghcr.io/owner/pet-manager:latest}
     # Build locally instead of pulling: docker compose up -d --build
     build: .
     restart: unless-stopped

@@ -1,0 +1,784 @@
+openapi: 3.1.0
+info:
+  title: Pet Manager API
+  version: 0.1.0
+  description: |
+    REST API of Pet Manager. All endpoints are under `/api`.
+
+    **Authentication:** send `Authorization: Bearer <token>` (from `/auth/login`
+    or `/auth/register`). Data endpoints also work without a token when the
+    instance runs in anonymous mode (see README). `/admin/*` always requires an
+    admin token.
+
+    **Errors** always have the shape `{ "error": { "code", "message", "details" } }`.
+    `code` is stable (e.g. `AUTH_INVALID_CREDENTIALS`, `VALIDATION_FAILED`,
+    `PET_NOT_FOUND`) and is translated by the client.
+
+    Dates are `YYYY-MM-DD`, timestamps ISO 8601 with offset. Empty strings in
+    optional text fields are stored as `null`.
+  license:
+    name: MIT
+    identifier: MIT
+servers:
+  - url: /api
+security:
+  - bearer: []
+tags:
+  - name: auth
+  - name: pets
+  - name: records
+    description: Per-pet records (health, medications, appointments, feeding, prevention, illnesses)
+  - name: dashboard
+  - name: catalog
+  - name: admin
+  - name: system
+
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      summary: Liveness/readiness probe (checks the database)
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, properties: { status: { type: string, const: ok } } }
+
+  /auth/status:
+    get:
+      tags: [auth]
+      summary: Instance state for the login screen
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  setupRequired: { type: boolean, description: No account exists yet }
+                  registrationOpen: { type: boolean }
+                  anonymousMode: { type: boolean, description: Data is accessible without login }
+                  anonymousModeAllowed:
+                    { type: boolean, description: Value of ALLOW_ANONYMOUS_MODE }
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register (the first account becomes admin)
+      description: Rate limited. After the first account, only possible if an admin allowed registration.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, display_name]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, minLength: 10, description: max. 72 bytes }
+                display_name: { type: string, maxLength: 100 }
+                locale: { $ref: '#/components/schemas/Locale' }
+      responses:
+        '201': { $ref: '#/components/responses/Session' }
+        '400': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/Session' }
+        '401': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: 'Current user (or `{ anonymous: true }` in anonymous mode)'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/User'
+                  - type: object
+                    properties:
+                      { anonymous: { type: boolean, const: true }, role: { type: string } }
+    patch:
+      tags: [auth]
+      summary: Update own profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                display_name: { type: string }
+                locale: { $ref: '#/components/schemas/Locale' }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/User' } } },
+          }
+  /auth/password:
+    post:
+      tags: [auth]
+      summary: Change own password (signs out all other sessions)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties:
+                current_password: { type: string }
+                new_password: { type: string, minLength: 10 }
+      responses:
+        '200':
+          description: New token for the current session
+          content:
+            {
+              application/json:
+                { schema: { type: object, properties: { token: { type: string } } } },
+            }
+        '400': { $ref: '#/components/responses/Error' }
+
+  /dashboard:
+    get:
+      tags: [dashboard]
+      summary: Summary for the start page
+      description: Doses from 12 h ago to 24 h ahead (with given/overdue state), appointments in the next 30 days, prevention due within 14 days, low stock and open illnesses.
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object } } } }
+
+  /pets:
+    get:
+      tags: [pets]
+      summary: List pets
+      parameters:
+        - { name: archived, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Pet'
+                    - type: object
+                      properties:
+                        last_weight_kg: { type: [number, 'null'] }
+                        open_illnesses: { type: integer }
+    post:
+      tags: [pets]
+      summary: Create a pet
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/PetInput' } } },
+        }
+      responses:
+        '201':
+          {
+            description: Created,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Pet' } } },
+          }
+        '400': { $ref: '#/components/responses/Error' }
+  /pets/{petId}:
+    parameters: [{ $ref: '#/components/parameters/petId' }]
+    get:
+      tags: [pets]
+      summary: Get a pet
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Pet' } } },
+          }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [pets]
+      summary: Update a pet (partial)
+      requestBody:
+        { content: { application/json: { schema: { $ref: '#/components/schemas/PetInput' } } } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Pet' } } },
+          }
+    delete:
+      tags: [pets]
+      summary: Delete a pet and all its records
+      responses:
+        '204': { description: Deleted }
+  /pets/{petId}/photo:
+    parameters: [{ $ref: '#/components/parameters/petId' }]
+    post:
+      tags: [pets]
+      summary: Upload/replace the photo
+      description: JPEG, PNG, WebP or GIF (checked by file signature), max. `MAX_UPLOAD_MB`. Served afterwards at `/uploads/<photo>`.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { type: object, properties: { photo: { type: string, format: binary } } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Pet' } } },
+          }
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [pets]
+      summary: Remove the photo
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Pet' } } },
+          }
+
+  /pets/{petId}/{resource}:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/resource' }
+    get:
+      tags: [records]
+      summary: List records of a pet
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { type: array, items: { $ref: '#/components/schemas/Record' } } },
+              },
+          }
+    post:
+      tags: [records]
+      summary: Create a record
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/Record' } } },
+        }
+      responses:
+        '201':
+          {
+            description: Created,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Record' } } },
+          }
+        '400': { $ref: '#/components/responses/Error' }
+  /pets/{petId}/{resource}/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/resource' }
+      - { $ref: '#/components/parameters/id' }
+    get:
+      tags: [records]
+      summary: Get a record
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Record' } } },
+          }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [records]
+      summary: Update a record (partial)
+      requestBody:
+        { content: { application/json: { schema: { $ref: '#/components/schemas/Record' } } } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Record' } } },
+          }
+    delete:
+      tags: [records]
+      summary: Delete a record
+      responses:
+        '204': { description: Deleted }
+
+  /pets/{petId}/medications/{id}/doses:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/id' }
+    get:
+      tags: [records]
+      summary: Recorded doses (newest first)
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 500 } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { type: array, items: { $ref: '#/components/schemas/Dose' } } },
+              },
+          }
+    post:
+      tags: [records]
+      summary: Record a dose as given (decrements stock)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                given_at: { type: string, format: date-time, description: Default now }
+                amount: { type: number, description: Default the medication's dose }
+                notes: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dose: { $ref: '#/components/schemas/Dose' }
+                  medication: { $ref: '#/components/schemas/Medication' }
+  /pets/{petId}/medications/{id}/doses/{doseId}:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/id' }
+      - { name: doseId, in: path, required: true, schema: { type: integer } }
+    delete:
+      tags: [records]
+      summary: Undo a dose (restores stock)
+      responses:
+        '204': { description: Deleted }
+
+  /pets/{petId}/illnesses/{id}/entries:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/id' }
+    get:
+      tags: [records]
+      summary: Entries of an illness (chronological)
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { type: array, items: { $ref: '#/components/schemas/IllnessEntry' } } },
+              },
+          }
+    post:
+      tags: [records]
+      summary: Add an entry
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/IllnessEntry' } } },
+        }
+      responses:
+        '201':
+          {
+            description: Created,
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/IllnessEntry' } } },
+          }
+  /pets/{petId}/illnesses/{id}/entries/{entryId}:
+    parameters:
+      - { $ref: '#/components/parameters/petId' }
+      - { $ref: '#/components/parameters/id' }
+      - { name: entryId, in: path, required: true, schema: { type: integer } }
+    patch:
+      tags: [records]
+      summary: Update an entry
+      requestBody:
+        { content: { application/json: { schema: { $ref: '#/components/schemas/IllnessEntry' } } } }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/IllnessEntry' } } },
+          }
+    delete:
+      tags: [records]
+      summary: Delete an entry
+      responses:
+        '204': { description: Deleted }
+
+  /catalog/{kind}:
+    parameters: [{ $ref: '#/components/parameters/catalogKind' }]
+    get:
+      tags: [catalog]
+      summary: List catalog items
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { type: array, items: { $ref: '#/components/schemas/CatalogItem' } } },
+              },
+          }
+    post:
+      tags: [catalog]
+      summary: Create a catalog item (admin)
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/CatalogItem' } } },
+        }
+      responses:
+        '201': { description: Created }
+        '403': { $ref: '#/components/responses/Error' }
+  /catalog/{kind}/{id}:
+    parameters:
+      - { $ref: '#/components/parameters/catalogKind' }
+      - { $ref: '#/components/parameters/id' }
+    patch:
+      tags: [catalog]
+      summary: Update a catalog item (admin)
+      requestBody:
+        { content: { application/json: { schema: { $ref: '#/components/schemas/CatalogItem' } } } }
+      responses:
+        '200': { description: OK }
+    delete:
+      tags: [catalog]
+      summary: Delete a catalog item (admin)
+      responses:
+        '204': { description: Deleted }
+
+  /admin/settings:
+    get:
+      tags: [admin]
+      summary: Instance settings (the ntfy token is never returned)
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+          }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    put:
+      tags: [admin]
+      summary: Update instance settings
+      description: '`requireLogin: false` is rejected with `ANONYMOUS_MODE_NOT_ALLOWED` unless the server runs with `ALLOW_ANONYMOUS_MODE=true`. Omit `ntfy.token` to keep the stored token, send an empty string to remove it.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requireLogin: { type: boolean }
+                allowRegistration: { type: boolean }
+                notificationLocale:
+                  { oneOf: [{ $ref: '#/components/schemas/Locale' }, { type: 'null' }] }
+                ntfy:
+                  type: object
+                  required: [enabled, url, topic]
+                  properties:
+                    enabled: { type: boolean }
+                    url: { type: string, format: uri }
+                    topic: { type: string, pattern: '^[\w-]*$' }
+                    token: { type: string }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+          }
+        '400': { $ref: '#/components/responses/Error' }
+  /admin/ntfy/test:
+    post:
+      tags: [admin]
+      summary: Send a test notification
+      responses:
+        '200': { description: Sent }
+        '400': { $ref: '#/components/responses/Error' }
+        '502': { $ref: '#/components/responses/Error' }
+  /admin/users:
+    get:
+      tags: [admin]
+      summary: List users
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  { schema: { type: array, items: { $ref: '#/components/schemas/User' } } },
+              },
+          }
+  /admin/users/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    patch:
+      tags: [admin]
+      summary: Change a user's role
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [role],
+                properties: { role: { type: string, enum: [admin, user] } },
+              }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/User' } } },
+          }
+    delete:
+      tags: [admin]
+      summary: Delete a user (not yourself)
+      responses:
+        '204': { description: Deleted }
+
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    petId: { name: petId, in: path, required: true, schema: { type: integer } }
+    id: { name: id, in: path, required: true, schema: { type: integer } }
+    resource:
+      name: resource
+      in: path
+      required: true
+      schema:
+        { type: string, enum: [health, medications, appointments, feeding, prevention, illnesses] }
+    catalogKind:
+      name: kind
+      in: path
+      required: true
+      schema: { type: string, enum: [foods, medications] }
+  responses:
+    Session:
+      description: Logged in
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token: { type: string }
+              user: { $ref: '#/components/schemas/User' }
+    Error:
+      description: Error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+  schemas:
+    Locale: { type: string, enum: [en, de] }
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { type: string, examples: [VALIDATION_FAILED] }
+            message: { type: string }
+            details:
+              type: array
+              items:
+                {
+                  type: object,
+                  properties:
+                    { path: { type: string }, code: { type: string }, message: { type: string } },
+                }
+    User:
+      type: object
+      properties:
+        id: { type: integer }
+        email: { type: string }
+        display_name: { type: string }
+        role: { type: string, enum: [admin, user] }
+        locale: { $ref: '#/components/schemas/Locale' }
+    Species: { type: string, enum: [dog, cat, rabbit, rodent, bird, fish, reptile, horse, other] }
+    PetInput:
+      type: object
+      properties:
+        name: { type: string, maxLength: 100 }
+        species: { $ref: '#/components/schemas/Species' }
+        breed: { type: [string, 'null'] }
+        sex: { type: [string, 'null'], enum: [male, female, unknown, null] }
+        neutered: { type: boolean }
+        birth_date: { type: [string, 'null'], format: date }
+        color: { type: [string, 'null'] }
+        microchip: { type: [string, 'null'] }
+        notes: { type: [string, 'null'] }
+        archived: { type: boolean }
+    Pet:
+      allOf:
+        - $ref: '#/components/schemas/PetInput'
+        - type: object
+          properties:
+            id: { type: integer }
+            photo: { type: [string, 'null'], description: File name under /uploads/ }
+            created_at: { type: string, format: date-time }
+            updated_at: { type: string, format: date-time }
+    Record:
+      description: Shape depends on the resource.
+      oneOf:
+        - $ref: '#/components/schemas/HealthEntry'
+        - $ref: '#/components/schemas/Medication'
+        - $ref: '#/components/schemas/Appointment'
+        - $ref: '#/components/schemas/FeedingPlan'
+        - $ref: '#/components/schemas/PreventionItem'
+        - $ref: '#/components/schemas/Illness'
+    HealthEntry:
+      type: object
+      required: [date, type]
+      properties:
+        id: { type: integer, readOnly: true }
+        date: { type: string, format: date }
+        type: { type: string, enum: [weight, vet_visit, vaccination, observation, other] }
+        title: { type: [string, 'null'] }
+        weight_kg: { type: [number, 'null'] }
+        notes: { type: [string, 'null'] }
+    Medication:
+      type: object
+      required: [name, start_date]
+      properties:
+        id: { type: integer, readOnly: true }
+        catalog_id: { type: [integer, 'null'] }
+        name: { type: string }
+        dose: { type: [number, 'null'] }
+        unit: { type: [string, 'null'] }
+        times:
+          {
+            type: array,
+            items: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' },
+            description: Times of day in the server timezone (TZ),
+          }
+        interval_days: { type: integer, minimum: 1, maximum: 365, default: 1 }
+        start_date: { type: string, format: date }
+        end_date: { type: [string, 'null'], format: date }
+        stock: { type: [number, 'null'] }
+        low_stock_threshold: { type: [number, 'null'] }
+        reminders_enabled: { type: boolean, default: true }
+        notes: { type: [string, 'null'] }
+    Dose:
+      type: object
+      properties:
+        id: { type: integer }
+        medication_id: { type: integer }
+        given_at: { type: string, format: date-time }
+        amount: { type: [number, 'null'] }
+        given_by: { type: [integer, 'null'] }
+        given_by_name: { type: [string, 'null'] }
+        notes: { type: [string, 'null'] }
+    Appointment:
+      type: object
+      required: [title, starts_at]
+      properties:
+        id: { type: integer, readOnly: true }
+        title: { type: string }
+        starts_at: { type: string, format: date-time }
+        location: { type: [string, 'null'] }
+        notes: { type: [string, 'null'] }
+        remind_minutes_before: { type: [integer, 'null'], maximum: 20160 }
+        done: { type: boolean }
+    FeedingPlan:
+      type: object
+      required: [food_name]
+      properties:
+        id: { type: integer, readOnly: true }
+        food_id: { type: [integer, 'null'] }
+        food_name: { type: string }
+        amount: { type: [number, 'null'] }
+        unit: { type: [string, 'null'] }
+        times: { type: array, items: { type: string } }
+        notes: { type: [string, 'null'] }
+    PreventionItem:
+      type: object
+      required: [type]
+      properties:
+        id: { type: integer, readOnly: true }
+        type: { type: string, enum: [deworming, flea_tick, vaccination, dental, grooming, other] }
+        product: { type: [string, 'null'] }
+        last_date: { type: [string, 'null'], format: date }
+        interval_days: { type: [integer, 'null'] }
+        notes: { type: [string, 'null'] }
+    Illness:
+      type: object
+      required: [title, started_on]
+      properties:
+        id: { type: integer, readOnly: true }
+        title: { type: string }
+        status: { type: string, enum: [active, chronic, resolved] }
+        started_on: { type: string, format: date }
+        ended_on: { type: [string, 'null'], format: date }
+        diagnosis: { type: [string, 'null'] }
+        notes: { type: [string, 'null'] }
+    IllnessEntry:
+      type: object
+      required: [date]
+      properties:
+        id: { type: integer, readOnly: true }
+        date: { type: string, format: date }
+        severity: { type: [integer, 'null'], minimum: 1, maximum: 5 }
+        temperature_c: { type: [number, 'null'] }
+        symptoms: { type: [string, 'null'] }
+        treatment: { type: [string, 'null'] }
+        notes: { type: [string, 'null'] }
+    CatalogItem:
+      type: object
+      required: [name]
+      properties:
+        id: { type: integer, readOnly: true }
+        name: { type: string }
+        brand: { type: [string, 'null'], description: foods only }
+        kcal_per_100g: { type: [number, 'null'], description: foods only }
+        active_ingredient: { type: [string, 'null'], description: medications only }
+        default_dose: { type: [number, 'null'], description: medications only }
+        unit: { type: [string, 'null'], description: medications only }
+        notes: { type: [string, 'null'] }
+    Settings:
+      type: object
+      properties:
+        requireLogin: { type: boolean }
+        allowRegistration: { type: boolean }
+        notificationLocale: { oneOf: [{ $ref: '#/components/schemas/Locale' }, { type: 'null' }] }
+        anonymousModeAllowed: { type: boolean }
+        ntfy:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            url: { type: string }
+            topic: { type: string }
+            hasToken: { type: boolean }

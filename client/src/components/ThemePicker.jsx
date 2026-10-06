@@ -4,10 +4,11 @@ import Typography from '@mui/material/Typography';
 import { alpha, useTheme } from '@mui/material/styles';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTranslation } from 'react-i18next';
-import { THEMES, DEFAULT_LIGHT, DEFAULT_DARK } from '../theme/tokens.js';
+import { THEMES, THEME_IDS, DEFAULT_LIGHT, DEFAULT_DARK } from '../theme/tokens.js';
 import { useThemeMode } from '../theme/ThemeModeProvider.jsx';
 
-const OPTIONS = ['system', 'neutral-light', 'neutral-dark', 'playful', 'meadow'];
+// Every theme defined in tokens.js shows up automatically.
+const OPTIONS = ['system', ...THEME_IDS];
 
 function swatches(id) {
   if (id === 'system') {
