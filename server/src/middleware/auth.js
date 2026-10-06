@@ -37,11 +37,24 @@ export function createAuth({ config, pool, settings }) {
       throw new ApiError(401, 'AUTH_INVALID_TOKEN', 'Invalid or expired token');
     }
     const { rows } = await pool.query(
-      'SELECT id, email, display_name, role, locale FROM users WHERE id = $1',
+      'SELECT id, email, display_name, role, locale, password_changed_at FROM users WHERE id = $1',
       [Number(payload.sub)],
     );
-    if (!rows[0]) throw new ApiError(401, 'AUTH_INVALID_TOKEN', 'User no longer exists');
-    return rows[0];
+    const user = rows[0];
+    if (!user) throw new ApiError(401, 'AUTH_INVALID_TOKEN', 'User no longer exists');
+    // Changing the password invalidates all previously issued tokens.
+    if (
+      user.password_changed_at &&
+      payload.iat < Math.floor(user.password_changed_at.getTime() / 1000)
+    ) {
+      throw new ApiError(
+        401,
+        'AUTH_INVALID_TOKEN',
+        'Token was issued before the last password change',
+      );
+    }
+    delete user.password_changed_at;
+    return user;
   }
 
   const authenticate =

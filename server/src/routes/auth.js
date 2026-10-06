@@ -122,11 +122,14 @@ export function authRouter({ pool, config, settings, auth }) {
     const policyError = checkPasswordPolicy(data.new_password, { email: req.user.email });
     if (policyError)
       throw new ApiError(400, policyError, 'Password does not meet the requirements');
-    await pool.query('UPDATE users SET password_hash = $2, updated_at = now() WHERE id = $1', [
-      req.user.id,
-      await hashPassword(data.new_password),
-    ]);
-    res.status(204).end();
+    // Truncate to whole seconds: JWT "iat" has second precision.
+    const { rows: updated } = await pool.query(
+      `UPDATE users SET password_hash = $2, password_changed_at = date_trunc('second', now()), updated_at = now()
+       WHERE id = $1 RETURNING *`,
+      [req.user.id, await hashPassword(data.new_password)],
+    );
+    // Other sessions are logged out; this one gets a fresh token.
+    res.json({ token: signToken(config, updated[0]) });
   });
 
   return router;

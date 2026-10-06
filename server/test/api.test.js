@@ -105,6 +105,34 @@ describe('auth', () => {
   });
 });
 
+describe('password change', () => {
+  it('invalidates older tokens and returns a new one', async () => {
+    const login = await api()
+      .post('/api/auth/login')
+      .send({ email: 'user@example.com', password: PASSWORD });
+    const oldToken = login.body.token;
+    // JWT iat has second precision: make sure the change happens in a later second.
+    await new Promise((r) => setTimeout(r, 1100));
+    const res = await api()
+      .post('/api/auth/password')
+      .set(auth(oldToken))
+      .send({ current_password: PASSWORD, new_password: `${PASSWORD}-new` });
+    expect(res.status).toBe(200);
+    expect((await api().get('/api/pets').set(auth(oldToken))).body.error.code).toBe(
+      'AUTH_INVALID_TOKEN',
+    );
+    expect((await api().get('/api/pets').set(auth(res.body.token))).status).toBe(200);
+  });
+
+  it('rejects a wrong current password', async () => {
+    const res = await api()
+      .post('/api/auth/password')
+      .set(auth(adminToken))
+      .send({ current_password: 'wrong-password', new_password: 'another-long-password' });
+    expect(res.body.error.code).toBe('AUTH_WRONG_PASSWORD');
+  });
+});
+
 describe('pets and related data', () => {
   let petId;
 

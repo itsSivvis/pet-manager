@@ -8,7 +8,8 @@ import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useTranslation } from 'react-i18next';
-import { patch, post } from '../api/client.js';
+import { patch, post, TOKEN_KEY } from '../api/client.js';
+import { storage } from '../lib/storage.js';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { useErrorMessage } from '../lib/useErrorMessage.js';
 import PageHeader from '../components/PageHeader.jsx';
@@ -95,7 +96,8 @@ export default function Settings() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   run(async () => {
-                    await post('/auth/password', pw);
+                    const { token } = await post('/auth/password', pw);
+                    storage.set(TOKEN_KEY, token);
                     setPw({ current_password: '', new_password: '' });
                   }, t('settings.passwordChanged'));
                 }}
