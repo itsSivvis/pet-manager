@@ -33,13 +33,18 @@ function licenseOf(pkg) {
 /** Accepts SPDX expressions like "(MIT OR Apache-2.0)" if any alternative is allowed. */
 function isAllowed(expr) {
   const alternatives = expr.replace(/[()]/g, '').split(/\s+OR\s+/i);
-  return alternatives.some((alt) => alt.split(/\s+AND\s+/i).every((part) => ALLOWED.has(part.trim())));
+  return alternatives.some((alt) =>
+    alt.split(/\s+AND\s+/i).every((part) => ALLOWED.has(part.trim())),
+  );
 }
 
-const nodes = JSON.parse(execFileSync('npm', ['query', '.prod'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }));
+const nodes = JSON.parse(
+  execFileSync('npm', ['query', '.prod'], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }),
+);
 const seen = new Map();
 for (const node of nodes) {
-  if (node.isWorkspace || node.name?.startsWith('@pet-manager/') || node.name === 'pet-manager') continue;
+  if (node.isWorkspace || node.name?.startsWith('@pet-manager/') || node.name === 'pet-manager')
+    continue;
   seen.set(`${node.name}@${node.version}`, licenseOf(node));
 }
 
@@ -51,7 +56,8 @@ for (const [pkg, license] of seen) {
 }
 
 console.log(`Production dependencies: ${seen.size}`);
-for (const [license, n] of Object.entries(counts).sort((a, b) => b[1] - a[1])) console.log(`  ${license}: ${n}`);
+for (const [license, n] of Object.entries(counts).sort((a, b) => b[1] - a[1]))
+  console.log(`  ${license}: ${n}`);
 if (problems.length) {
   console.error(`\nLicenses not on the allowlist (review manually):\n  ${problems.join('\n  ')}`);
   process.exit(1);
