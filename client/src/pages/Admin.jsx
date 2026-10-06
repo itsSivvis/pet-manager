@@ -39,7 +39,7 @@ function Section({ title, description, children }) {
   return (
     <Card>
       <CardContent>
-        <Typography variant="h6" component="h2">
+        <Typography variant="h6" component="h2" sx={{ mb: description ? 0 : 2 }}>
           {title}
         </Typography>
         {description && (

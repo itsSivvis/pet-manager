@@ -58,7 +58,6 @@ export default function ThemePicker({ compact = false }) {
               borderColor: selected ? 'primary.main' : 'divider',
               bgcolor: selected ? alpha(theme.palette.primary.main, 0.08) : 'background.paper',
               textAlign: 'left',
-              position: 'relative',
               '&.Mui-focusVisible': {
                 outline: `3px solid ${alpha(theme.palette.primary.main, 0.6)}`,
                 outlineOffset: 2,
@@ -82,22 +81,18 @@ export default function ThemePicker({ compact = false }) {
               ))}
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {t(`themes.${id}.name`)}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, flex: 1 }}>
+                  {t(`themes.${id}.name`)}
+                </Typography>
+                {selected && <CheckCircleIcon color="primary" fontSize="small" />}
+              </Box>
               {!compact && (
                 <Typography variant="caption" color="text.secondary">
                   {t(`themes.${id}.description`)}
                 </Typography>
               )}
             </Box>
-            {selected && (
-              <CheckCircleIcon
-                color="primary"
-                fontSize="small"
-                sx={compact ? {} : { position: 'absolute', top: 8, right: 8 }}
-              />
-            )}
           </ButtonBase>
         );
       })}
