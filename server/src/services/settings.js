@@ -1,0 +1,42 @@
+// Instance-wide settings stored in the `settings` table (JSON values).
+
+export const SETTING_DEFAULTS = {
+  requireLogin: true,
+  allowRegistration: false,
+  ntfy: { enabled: false, url: 'https://ntfy.sh', topic: '', token: '' },
+  notificationLocale: null, // null = DEFAULT_LOCALE from the environment
+};
+
+export function createSettingsStore(pool) {
+  let cache = null;
+
+  async function all() {
+    if (!cache) {
+      const { rows } = await pool.query('SELECT key, value FROM settings');
+      cache = { ...structuredClone(SETTING_DEFAULTS) };
+      for (const row of rows) {
+        if (row.key in SETTING_DEFAULTS) cache[row.key] = row.value;
+      }
+    }
+    return cache;
+  }
+
+  async function get(key) {
+    return (await all())[key];
+  }
+
+  async function set(values) {
+    for (const [key, value] of Object.entries(values)) {
+      if (!(key in SETTING_DEFAULTS)) continue;
+      await pool.query(
+        `INSERT INTO settings (key, value, updated_at) VALUES ($1, $2, now())
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`,
+        [key, JSON.stringify(value)],
+      );
+    }
+    cache = null;
+    return all();
+  }
+
+  return { all, get, set, invalidate: () => (cache = null) };
+}

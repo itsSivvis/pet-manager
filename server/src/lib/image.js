@@ -1,0 +1,26 @@
+// Detects the real image type from the file's magic bytes. The client-supplied
+// MIME type and file extension are never trusted.
+const SIGNATURES = [
+  { type: 'image/jpeg', ext: 'jpg', test: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
+  {
+    type: 'image/png',
+    ext: 'png',
+    test: (b) =>
+      b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+  },
+  {
+    type: 'image/webp',
+    ext: 'webp',
+    test: (b) => b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP',
+  },
+  {
+    type: 'image/gif',
+    ext: 'gif',
+    test: (b) => ['GIF87a', 'GIF89a'].includes(b.toString('ascii', 0, 6)),
+  },
+];
+
+export function detectImageType(buffer) {
+  if (!Buffer.isBuffer(buffer) || buffer.length < 12) return null;
+  return SIGNATURES.find((s) => s.test(buffer)) ?? null;
+}
