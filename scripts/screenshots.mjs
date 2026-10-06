@@ -104,6 +104,12 @@ for (const theme of THEMES) {
       );
       await tab.goto(`${BASE_URL}${page.path}`, { waitUntil: 'networkidle' });
       await tab.waitForTimeout(400); // fonts & charts
+      // Capture artifact fix: let the fixed, docked drawer grow with the page so
+      // it spans the whole full-page screenshot (no effect on the real app).
+      await tab.addStyleTag({
+        content:
+          'nav:has(> .MuiDrawer-docked){position:relative}.MuiDrawer-docked .MuiDrawer-paper{position:absolute;top:0;bottom:0;height:auto}',
+      });
       await tab.screenshot({
         path: path.join(OUT, theme, `${vpName}-${page.name}.png`),
         fullPage: true,
