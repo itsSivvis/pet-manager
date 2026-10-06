@@ -130,7 +130,7 @@ export default function Settings() {
           </Typography>
           <Typography variant="body2" sx={{ mt: 1 }}>
             <Link
-              href={import.meta.env.VITE_SOURCE_URL || 'https://github.com/OWNER/pet-manager'}
+              href={import.meta.env.VITE_SOURCE_URL || 'https://github.com/itsSivvis/pet-manager'}
               target="_blank"
               rel="noreferrer"
             >

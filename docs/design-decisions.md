@@ -59,9 +59,9 @@ and served with `nosniff` and a sandboxing CSP.
 - No image processing library (e.g. sharp): photos are stored as uploaded
   (max. 5 MB). Server-side resizing is on the roadmap.
 
-## License: MIT
+## License: MIT (decided)
 
 MIT keeps the barrier for users, contributors and packagers as low as
 possible and is compatible with all dependencies (see `npm run licenses`).
-If the project should prevent closed-source hosted forks, AGPL-3.0 would be the
-alternative – this has to be decided before the first public release.
+AGPL-3.0 was considered (it would force hosted forks to publish their
+changes) but rejected in favour of the simpler, more permissive license.

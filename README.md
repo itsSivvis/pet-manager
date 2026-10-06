@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OWNER/pet-manager/actions/workflows/ci.yml"><img src="https://github.com/OWNER/pet-manager/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/itsSivvis/pet-manager/actions/workflows/ci.yml"><img src="https://github.com/itsSivvis/pet-manager/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License" /></a>
   <a href="README.de.md">🇩🇪 Deutsch</a>
 </p>
@@ -49,7 +49,7 @@ More screenshots (every page, theme and viewport) are in [`docs/screenshots`](do
 Requirements: Docker with the Compose plugin.
 
 ```bash
-git clone https://github.com/OWNER/pet-manager.git && cd pet-manager && ./scripts/init-env.sh && docker compose up -d
+git clone https://github.com/itsSivvis/pet-manager.git && cd pet-manager && ./scripts/init-env.sh && docker compose up -d
 ```
 
 `init-env.sh` creates `.env` with a random `JWT_SECRET` and database password.
@@ -69,7 +69,7 @@ docker compose exec app node server/src/db/cli.js seed
 Requirements: Node.js 22+, PostgreSQL 14+ (16 recommended).
 
 ```bash
-git clone https://github.com/OWNER/pet-manager.git && cd pet-manager
+git clone https://github.com/itsSivvis/pet-manager.git && cd pet-manager
 npm ci
 npm run build                                   # builds the web app into client/dist
 
@@ -110,7 +110,7 @@ ntfy, the login requirement and registration are configured in the web UI under 
 | `REMINDERS_ENABLED`             | `true`                                                       | Turn the reminder scheduler off (e.g. on additional replicas).                                                                       |
 | `REMINDER_INTERVAL_SECONDS`     | `60`                                                         | How often reminders are checked.                                                                                                     |
 | `ALLOW_ANONYMOUS_MODE`          | `false`                                                      | ⚠️ Allows an admin to switch off the login requirement – see [Security](#security).                                                  |
-| `PET_MANAGER_IMAGE`             | `ghcr.io/owner/pet-manager:latest`                           | Image used by Compose.                                                                                                               |
+| `PET_MANAGER_IMAGE`             | `ghcr.io/itssivvis/pet-manager:latest`                           | Image used by Compose.                                                                                                               |
 
 ### Push notifications (ntfy)
 
@@ -188,7 +188,7 @@ docker compose up -d
 ```
 
 Database migrations run automatically on start. Read the [CHANGELOG](CHANGELOG.md) before major updates.
-To pin a version, set `PET_MANAGER_IMAGE=ghcr.io/owner/pet-manager:0.1.0` in `.env`.
+To pin a version, set `PET_MANAGER_IMAGE=ghcr.io/itssivvis/pet-manager:0.1.0` in `.env`.
 
 ## Security
 
@@ -240,7 +240,7 @@ Ideas for future versions – contributions welcome:
 
 ## License
 
-[MIT](LICENSE) © `<Name>`
+[MIT](LICENSE) © `itsSivvis`
 
 Fonts: Inter, Nunito and Fredoka under the SIL Open Font License 1.1 (via Fontsource).
 Icons: Material Icons (Apache License 2.0) via `@mui/icons-material`.

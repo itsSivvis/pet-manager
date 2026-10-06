@@ -10,8 +10,8 @@ up to date (see "Updating" in the README).
 **Please do not open a public issue for security problems.**
 
 Report vulnerabilities privately via
-[GitHub Security Advisories](https://github.com/OWNER/pet-manager/security/advisories/new)
-or by e-mail to `<security-contact@example.com>`.
+[GitHub private vulnerability reporting](https://github.com/itsSivvis/pet-manager/security/advisories/new).
+Only the maintainer ([@itsSivvis](https://github.com/itsSivvis)) can see these reports.
 
 Please include:
 

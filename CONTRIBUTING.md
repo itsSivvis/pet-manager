@@ -14,7 +14,7 @@ themes, documentation and code are all welcome.
 Requirements: Node.js 22, npm 10, Docker (or a local PostgreSQL 16).
 
 ```bash
-git clone https://github.com/OWNER/pet-manager.git
+git clone https://github.com/itsSivvis/pet-manager.git
 cd pet-manager
 npm install
 docker compose -f docker-compose.dev.yml up -d   # PostgreSQL (+ test database)

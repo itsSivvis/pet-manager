@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - YYYY-MM-DD
+## [0.1.0] - 2026-10-06
 
 First public release.
 
@@ -42,5 +42,5 @@ First public release.
 - Uploads validated by file signature and size; stored under random names.
 - Changing the password signs out all other sessions.
 
-[Unreleased]: https://github.com/OWNER/pet-manager/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/OWNER/pet-manager/releases/tag/v0.1.0
+[Unreleased]: https://github.com/itsSivvis/pet-manager/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/itsSivvis/pet-manager/releases/tag/v0.1.0
