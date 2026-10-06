@@ -22,6 +22,11 @@ describe('loadConfig', () => {
     expect(c.isProduction).toBe(true);
     expect(c.clientUrls).toEqual(['https://pets.example.com']);
   });
+  it('resolves relative directories to absolute paths (needed by sendFile)', () => {
+    const c = loadConfig({ STATIC_DIR: 'client/dist', UPLOAD_DIR: 'data/uploads' });
+    expect(c.staticDir.startsWith('/')).toBe(true);
+    expect(c.uploadDir.startsWith('/')).toBe(true);
+  });
   it('anonymous mode is off unless explicitly allowed', () => {
     expect(loadConfig({}).allowAnonymousMode).toBe(false);
     expect(loadConfig({ ALLOW_ANONYMOUS_MODE: 'true' }).allowAnonymousMode).toBe(true);

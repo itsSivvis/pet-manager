@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 // Central, validated configuration. Everything that can be configured via the
 // environment is read here and nowhere else (see .env.example for the reference).
 
@@ -49,10 +51,10 @@ export function loadConfig(env = process.env) {
     clientUrls,
     // Number of reverse-proxy hops to trust for X-Forwarded-For (rate limiting, logs).
     trustProxy: int(env.TRUST_PROXY, 0),
-    uploadDir: env.UPLOAD_DIR || new URL('../uploads', import.meta.url).pathname,
+    uploadDir: path.resolve(env.UPLOAD_DIR || new URL('../uploads', import.meta.url).pathname),
     maxUploadBytes: int(env.MAX_UPLOAD_MB, 5) * 1024 * 1024,
     // Directory with the built client (served by the API server in production).
-    staticDir: env.STATIC_DIR || '',
+    staticDir: env.STATIC_DIR ? path.resolve(env.STATIC_DIR) : '',
     timezone: env.TZ || 'UTC',
     defaultLocale: env.DEFAULT_LOCALE === 'de' ? 'de' : 'en',
     // Hard safety switch: unless explicitly allowed here, an admin cannot turn off
