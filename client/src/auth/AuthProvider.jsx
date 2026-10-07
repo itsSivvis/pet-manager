@@ -6,22 +6,25 @@ import i18n from '../i18n/index.js';
 
 const AuthContext = createContext(null);
 
+/** Loads instance status and the current user (if logged in or in anonymous mode). */
+async function loadSession() {
+  try {
+    const status = await get('/auth/status');
+    let user = null;
+    if (storage.get(TOKEN_KEY) || status.anonymousMode) {
+      user = await get('/auth/me').catch(() => null);
+    }
+    return { loading: false, user, status };
+  } catch (error) {
+    return { loading: false, user: null, status: null, error };
+  }
+}
+
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
   const [state, setState] = useState({ loading: true, user: null, status: null });
 
-  const refresh = useCallback(async () => {
-    try {
-      const status = await get('/auth/status');
-      let user = null;
-      if (storage.get(TOKEN_KEY) || status.anonymousMode) {
-        user = await get('/auth/me').catch(() => null);
-      }
-      setState({ loading: false, user, status });
-    } catch (error) {
-      setState({ loading: false, user: null, status: null, error });
-    }
-  }, []);
+  const refresh = useCallback(async () => setState(await loadSession()), []);
 
   const logout = useCallback(() => {
     storage.set(TOKEN_KEY, null);
@@ -31,8 +34,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     setUnauthorizedHandler(logout);
-    refresh();
-  }, [logout, refresh]);
+    loadSession().then(setState);
+  }, [logout]);
 
   const finishLogin = useCallback(
     async ({ token, user }) => {

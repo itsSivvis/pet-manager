@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
@@ -111,7 +111,6 @@ function NtfySection({ settings, save }) {
   const [form, setForm] = useState({ ...settings.ntfy, token: undefined });
   const [locale, setLocale] = useState(settings.notificationLocale ?? '');
   const [msg, setMsg] = useState(null);
-  useEffect(() => setForm({ ...settings.ntfy, token: undefined }), [settings.ntfy]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -119,7 +118,9 @@ function NtfySection({ settings, save }) {
     try {
       const ntfy = { enabled: form.enabled, url: form.url, topic: form.topic };
       if (form.token !== undefined) ntfy.token = form.token;
-      await save({ ntfy, notificationLocale: locale || null });
+      const updated = await save({ ntfy, notificationLocale: locale || null });
+      // Show what the server stored (the token itself is never sent back).
+      setForm({ ...updated.ntfy, token: undefined });
       setMsg({ severity: 'success', text: t('common.saved') });
     } catch (err) {
       setMsg({ severity: 'error', text: errorMessage(err) });
@@ -414,6 +415,7 @@ export default function Admin() {
     try {
       const updated = await put('/admin/settings', values);
       queryClient.setQueryData(['admin', 'settings'], updated);
+      return updated;
     } catch (err) {
       setError(err);
       throw err;

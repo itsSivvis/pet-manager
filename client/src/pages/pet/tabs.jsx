@@ -109,10 +109,10 @@ export function AppointmentsTab({ petId }) {
       addLabel={t('appointments.add')}
       emptyEmoji="📅"
       emptyText={t('appointments.empty')}
-      initialValues={{
+      initialValues={() => ({
         starts_at: new Date(Date.now() + 86_400_000).toISOString(),
         remind_minutes_before: 60,
-      }}
+      })}
       fields={[
         { name: 'title', label: t('common.title'), required: true },
         {

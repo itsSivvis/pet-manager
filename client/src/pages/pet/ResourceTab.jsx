@@ -36,7 +36,13 @@ export default function ResourceTab({
 }) {
   const { t } = useTranslation();
   const res = usePetResource(petId, resource);
-  const [editing, setEditing] = useState(null); // null | 'new' | item
+  // null | { values } for a new record | an existing record
+  const [editing, setEditing] = useState(null);
+  const isNew = editing && !editing.id;
+  // initialValues may be a function so that time-dependent defaults
+  // (e.g. "tomorrow") are computed when the dialog opens, not while rendering.
+  const openNew = () =>
+    setEditing({ values: typeof initialValues === 'function' ? initialValues() : initialValues });
   const [deleting, setDeleting] = useState(null);
 
   return (
@@ -45,7 +51,7 @@ export default function ResourceTab({
         <Typography variant="h6" component="h2" sx={{ flex: 1 }}>
           {title}
         </Typography>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={() => setEditing('new')}>
+        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
           {addLabel}
         </Button>
       </Stack>
@@ -102,12 +108,12 @@ export default function ResourceTab({
       {editing && (
         <FormDialog
           open
-          title={editing === 'new' ? addLabel : t('common.edit')}
+          title={isNew ? addLabel : t('common.edit')}
           fields={fields}
-          initialValues={editing === 'new' ? initialValues : editing}
+          initialValues={isNew ? editing.values : editing}
           onClose={() => setEditing(null)}
           onSubmit={(values) =>
-            editing === 'new'
+            isNew
               ? res.create.mutateAsync(values)
               : res.update.mutateAsync({ id: editing.id, ...values })
           }
