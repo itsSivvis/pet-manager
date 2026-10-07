@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import { randomUUID } from 'node:crypto';
-import { writeFile, unlink } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import multer from 'multer';
 import { ApiError } from '../lib/errors.js';
 import { parse, idParam } from '../lib/validate.js';
-import { detectImageType } from '../lib/image.js';
+import { detectImageType, removeUpload } from '../lib/image.js';
 import { petSchema } from './schemas.js';
 
 export function petsRouter({ pool, config }) {
@@ -22,8 +22,8 @@ export function petsRouter({ pool, config }) {
          (SELECT weight_kg FROM health_entries h
            WHERE h.pet_id = p.id AND h.weight_kg IS NOT NULL ORDER BY date DESC, id DESC LIMIT 1) AS last_weight_kg,
          (SELECT count(*)::int FROM illnesses i WHERE i.pet_id = p.id AND i.status <> 'resolved') AS open_illnesses
-       FROM pets p WHERE p.archived = $1 ORDER BY lower(p.name)`,
-      [archived],
+       FROM pets p WHERE p.household_id = $1 AND p.archived = $2 ORDER BY lower(p.name)`,
+      [req.user.household_id, archived],
     );
     res.json(rows);
   });
@@ -32,25 +32,26 @@ export function petsRouter({ pool, config }) {
     const data = parse(petSchema, req.body);
     const cols = Object.keys(data);
     const { rows } = await pool.query(
-      `INSERT INTO pets (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING *`,
-      cols.map((c) => data[c]),
+      `INSERT INTO pets (household_id${cols.map((c) => `, ${c}`).join('')})
+       VALUES ($1${cols.map((_, i) => `, $${i + 2}`).join('')}) RETURNING *`,
+      [req.user.household_id, ...cols.map((c) => data[c])],
     );
     res.status(201).json(rows[0]);
   });
 
   router.get('/:id', async (req, res) => {
-    res.json(await findPet(parse(idParam, req.params.id)));
+    res.json(await findPet(req, parse(idParam, req.params.id)));
   });
 
   router.patch('/:id', async (req, res) => {
     const id = parse(idParam, req.params.id);
     const data = parse(petSchema.partial(), req.body);
     const cols = Object.keys(data);
-    if (!cols.length) return res.json(await findPet(id));
+    if (!cols.length) return res.json(await findPet(req, id));
     const { rows } = await pool.query(
-      `UPDATE pets SET ${cols.map((c, i) => `${c} = $${i + 2}`).join(', ')}, updated_at = now()
-       WHERE id = $1 RETURNING *`,
-      [id, ...cols.map((c) => data[c])],
+      `UPDATE pets SET ${cols.map((c, i) => `${c} = $${i + 3}`).join(', ')}, updated_at = now()
+       WHERE id = $1 AND household_id = $2 RETURNING *`,
+      [id, req.user.household_id, ...cols.map((c) => data[c])],
     );
     if (!rows[0]) throw new ApiError(404, 'PET_NOT_FOUND', 'pet not found');
     res.json(rows[0]);
@@ -58,7 +59,10 @@ export function petsRouter({ pool, config }) {
 
   router.delete('/:id', async (req, res) => {
     const id = parse(idParam, req.params.id);
-    const { rows } = await pool.query('DELETE FROM pets WHERE id = $1 RETURNING photo', [id]);
+    const { rows } = await pool.query(
+      'DELETE FROM pets WHERE id = $1 AND household_id = $2 RETURNING photo',
+      [id, req.user.household_id],
+    );
     if (!rows[0]) throw new ApiError(404, 'PET_NOT_FOUND', 'pet not found');
     await removePhoto(rows[0].photo);
     res.status(204).end();
@@ -81,7 +85,7 @@ export function petsRouter({ pool, config }) {
     },
     async (req, res) => {
       const id = parse(idParam, req.params.id);
-      const pet = await findPet(id);
+      const pet = await findPet(req, id);
       if (!req.file) throw new ApiError(400, 'UPLOAD_MISSING', 'No file uploaded');
       const kind = detectImageType(req.file.buffer);
       if (!kind)
@@ -104,7 +108,7 @@ export function petsRouter({ pool, config }) {
 
   router.delete('/:id/photo', async (req, res) => {
     const id = parse(idParam, req.params.id);
-    const pet = await findPet(id);
+    const pet = await findPet(req, id);
     const { rows } = await pool.query(
       'UPDATE pets SET photo = NULL, updated_at = now() WHERE id = $1 RETURNING *',
       [id],
@@ -113,16 +117,17 @@ export function petsRouter({ pool, config }) {
     res.json(rows[0]);
   });
 
-  async function findPet(id) {
-    const { rows } = await pool.query('SELECT * FROM pets WHERE id = $1', [id]);
+  // Pets of other households are reported as "not found".
+  async function findPet(req, id) {
+    const { rows } = await pool.query('SELECT * FROM pets WHERE id = $1 AND household_id = $2', [
+      id,
+      req.user.household_id,
+    ]);
     if (!rows[0]) throw new ApiError(404, 'PET_NOT_FOUND', 'pet not found');
     return rows[0];
   }
 
-  async function removePhoto(filename) {
-    if (!filename || !/^[\w-]+\.(jpg|png|webp|gif)$/.test(filename)) return;
-    await unlink(path.join(config.uploadDir, filename)).catch(() => {});
-  }
+  const removePhoto = (filename) => removeUpload(config.uploadDir, filename);
 
   return router;
 }

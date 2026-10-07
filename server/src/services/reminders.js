@@ -5,6 +5,7 @@ import {
   isLowStock,
 } from './reminder-schedule.js';
 import { sendNtfy } from './ntfy.js';
+import { householdSettings } from './households.js';
 import { t, formatDate, formatTime, formatNumber } from '../i18n/messages.js';
 
 // How far back each run looks. Together with reminder_log this makes reminders
@@ -15,18 +16,21 @@ const GIVEN_TOLERANCE_MS = 2 * 60 * 60 * 1000;
 const PREVENTION_HOUR = 9;
 
 /**
- * Computes all reminders due at `now`. Returns `{ key, title, message, tags }`
- * objects; duplicates are filtered later via reminder_log.
+ * Computes all reminders of one household due at `now`. Returns
+ * `{ key, title, message, tags }` objects; duplicates are filtered later via
+ * reminder_log.
  */
-export async function collectReminders({ pool, tz, locale, now = new Date() }) {
+export async function collectReminders({ pool, householdId, tz, locale, now = new Date() }) {
   const from = new Date(now.getTime() - LOOKBACK_MS);
   const out = [];
 
-  const meds = await pool.query(`
-    SELECT m.*, p.name AS pet_name,
-      (SELECT max(given_at) FROM medication_doses d WHERE d.medication_id = m.id) AS last_given
-    FROM medications m JOIN pets p ON p.id = m.pet_id
-    WHERE m.reminders_enabled AND NOT p.archived`);
+  const meds = await pool.query(
+    `SELECT m.*, p.name AS pet_name,
+       (SELECT max(given_at) FROM medication_doses d WHERE d.medication_id = m.id) AS last_given
+     FROM medications m JOIN pets p ON p.id = m.pet_id
+     WHERE p.household_id = $1 AND m.reminders_enabled AND NOT p.archived`,
+    [householdId],
+  );
   for (const med of meds.rows) {
     for (const occ of medicationOccurrences(med, from, now, tz)) {
       if (med.last_given && occ.at - med.last_given < GIVEN_TOLERANCE_MS) continue;
@@ -53,9 +57,9 @@ export async function collectReminders({ pool, tz, locale, now = new Date() }) {
 
   const appts = await pool.query(
     `SELECT a.*, p.name AS pet_name FROM appointments a JOIN pets p ON p.id = a.pet_id
-     WHERE NOT a.done AND a.remind_minutes_before IS NOT NULL
-       AND a.starts_at - make_interval(mins => a.remind_minutes_before) BETWEEN $1 AND $2`,
-    [from, now],
+     WHERE p.household_id = $1 AND NOT a.done AND a.remind_minutes_before IS NOT NULL
+       AND a.starts_at - make_interval(mins => a.remind_minutes_before) BETWEEN $2 AND $3`,
+    [householdId, from, now],
   );
   for (const a of appts.rows) {
     out.push({
@@ -79,7 +83,9 @@ export async function collectReminders({ pool, tz, locale, now = new Date() }) {
   if (localHour >= PREVENTION_HOUR) {
     const prev = await pool.query(
       `SELECT i.*, p.name AS pet_name FROM prevention_items i JOIN pets p ON p.id = i.pet_id
-       WHERE NOT p.archived AND i.last_date IS NOT NULL AND i.interval_days IS NOT NULL`,
+       WHERE p.household_id = $1 AND NOT p.archived
+         AND i.last_date IS NOT NULL AND i.interval_days IS NOT NULL`,
+      [householdId],
     );
     for (const item of prev.rows) {
       const due = preventionDueDate(item);
@@ -98,33 +104,44 @@ export async function collectReminders({ pool, tz, locale, now = new Date() }) {
   return out;
 }
 
-/** One scheduler tick: collect, de-duplicate via reminder_log, send. */
+/**
+ * One scheduler tick: for every household with ntfy enabled, collect its
+ * reminders, de-duplicate via reminder_log and send them to its own topic.
+ */
 export async function runReminders({
   pool,
-  settings,
   config,
   now = new Date(),
   send = sendNtfy,
   log = console,
 }) {
-  const ntfy = await settings.get('ntfy');
-  if (!ntfy?.enabled || !ntfy.topic) return 0;
-  const locale = (await settings.get('notificationLocale')) || config.defaultLocale;
-  const reminders = await collectReminders({ pool, tz: config.timezone, locale, now });
+  const { rows: households } = await pool.query('SELECT id, settings FROM households ORDER BY id');
   let sent = 0;
-  for (const r of reminders) {
-    const { rowCount } = await pool.query(
-      'INSERT INTO reminder_log (key) VALUES ($1) ON CONFLICT DO NOTHING',
-      [r.key],
-    );
-    if (!rowCount) continue;
-    try {
-      await send(ntfy, r);
-      sent++;
-    } catch (err) {
-      // Allow a retry on the next tick.
-      await pool.query('DELETE FROM reminder_log WHERE key = $1', [r.key]);
-      log.warn?.(`reminder ${r.key} failed: ${err.message}`);
+  for (const household of households) {
+    const { ntfy, notificationLocale } = householdSettings(household);
+    if (!ntfy?.enabled || !ntfy.topic) continue;
+    const locale = notificationLocale || config.defaultLocale;
+    const reminders = await collectReminders({
+      pool,
+      householdId: household.id,
+      tz: config.timezone,
+      locale,
+      now,
+    });
+    for (const r of reminders) {
+      const { rowCount } = await pool.query(
+        'INSERT INTO reminder_log (key) VALUES ($1) ON CONFLICT DO NOTHING',
+        [r.key],
+      );
+      if (!rowCount) continue;
+      try {
+        await send(ntfy, r);
+        sent++;
+      } catch (err) {
+        // Allow a retry on the next tick.
+        await pool.query('DELETE FROM reminder_log WHERE key = $1', [r.key]);
+        log.warn?.(`reminder ${r.key} failed: ${err.message}`);
+      }
     }
   }
   return sent;

@@ -2,6 +2,7 @@ import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
 import path from 'node:path';
+import rateLimit from 'express-rate-limit';
 import { existsSync } from 'node:fs';
 import { ApiError } from './lib/errors.js';
 import { createAuth } from './middleware/auth.js';
@@ -12,6 +13,7 @@ import { petResourceRouter } from './lib/crud.js';
 import { medicationsRouter } from './routes/medications.js';
 import { illnessesRouter } from './routes/illnesses.js';
 import { adminRouter } from './routes/admin.js';
+import { householdRouter } from './routes/household.js';
 import { catalogRouter } from './routes/catalog.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import {
@@ -56,6 +58,20 @@ export function createApp({ config, pool, settings = createSettingsStore(pool), 
     app.use('/api', cors({ origin: config.clientUrls, credentials: false }));
   }
   app.use(express.json({ limit: '1mb' }));
+
+  // Generous per-IP limit for all API routes; login/registration have a much
+  // stricter limiter of their own (routes/auth.js).
+  app.use(
+    '/api',
+    rateLimit({
+      windowMs: 60 * 1000,
+      limit: config.apiRateLimit,
+      standardHeaders: 'draft-8',
+      legacyHeaders: false,
+      handler: (_req, _res, next) =>
+        next(new ApiError(429, 'RATE_LIMITED', 'Too many requests, try again later')),
+    }),
+  );
 
   // Liveness/readiness probe for Docker and reverse proxies.
   app.get('/api/healthz', async (_req, res) => {
@@ -115,6 +131,8 @@ export function createApp({ config, pool, settings = createSettingsStore(pool), 
   data.use('/pets/:petId/illnesses', illnessesRouter(deps));
   app.use('/api', data);
 
+  // The own household (members, invites, notifications) needs a real login.
+  app.use('/api/household', auth.authenticate(), auth.requireAccount, householdRouter(deps));
   // The admin area always needs a real (non-anonymous) admin login.
   app.use('/api/admin', auth.authenticate(), auth.requireAdmin, adminRouter(deps));
 

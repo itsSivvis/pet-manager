@@ -63,5 +63,7 @@ export function loadConfig(env = process.env) {
     remindersEnabled: bool(env.REMINDERS_ENABLED, true),
     reminderIntervalMs: int(env.REMINDER_INTERVAL_SECONDS, 60) * 1000,
     authRateLimit: int(env.AUTH_RATE_LIMIT, 10),
+    // Requests per IP and minute for the whole API (protects the database).
+    apiRateLimit: int(env.API_RATE_LIMIT, 1000),
   };
 }

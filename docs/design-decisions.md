@@ -21,12 +21,19 @@ Instead of separate client (nginx) and server images there is a single image
 in which Express serves the built client. One container is simpler to run,
 update and secure, and same-origin hosting avoids CORS entirely.
 
-## Shared household data model
+## Households: `household_id` on users and pets only
 
-All accounts see the same pets. This matches the main use case (a family or
-flat-share caring for the same animals) and keeps the model simple.
-Multi-household support would require a `household_id` on every table and is
-on the roadmap.
+Several families can share one instance; each household sees only its own
+pets. Only `users` and `pets` carry a `household_id` – every other record
+belongs to a pet, so checking the pet once per request (in the shared per-pet
+router) scopes all of them without touching each table. Members of a household
+have equal rights there (pets, records, notifications, invite link); instance
+admins manage accounts and households but do not see other households' pets
+in the UI. The catalog stays instance-wide because it is reference data.
+
+New members join with an invite link instead of open registration, so a family
+can grow without opening the instance to everyone. Existing single-household
+installations are migrated into one household automatically.
 
 ## Login requirement guarded by an environment variable
 

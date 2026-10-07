@@ -35,7 +35,7 @@ server/
   src/middleware/auth.js JWT + anonymous mode + admin guard
   src/routes/           REST endpoints (+ zod schemas)
   src/lib/crud.js       generic CRUD router for pet sub-resources
-  src/services/         reminder schedule (pure), scheduler, ntfy, settings store
+  src/services/         reminder schedule (pure), scheduler, ntfy, settings store, households
   src/i18n/messages.js  push notification texts (en/de)
   test/                 vitest unit + integration tests (real PostgreSQL)
 e2e/                    Playwright smoke test
@@ -45,22 +45,26 @@ docs/                   this documentation, OpenAPI spec, screenshots
 
 ## Data model
 
-All logged-in users share the same data (one household per instance).
+An instance hosts any number of **households**. Every user and every pet
+belongs to exactly one household; all other pet data hangs off `pets` and is
+therefore separated per household, too. Members of the same household share
+everything. The food/medication catalog is instance-wide.
 
-| Table                                   | Content                                                                                       |
-| --------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `users`                                 | accounts (`admin` / `user`), preferred language, `password_changed_at`                        |
-| `settings`                              | instance settings as JSON (`requireLogin`, `allowRegistration`, `ntfy`, `notificationLocale`) |
-| `pets`                                  | pets incl. photo file name and `archived` flag                                                |
-| `health_entries`                        | weight, vet visits, vaccinations, observations                                                |
-| `medications` / `medication_doses`      | schedule (times of day, every _n_ days, start/end), stock; doses actually given               |
-| `appointments`                          | date/time, location, reminder offset                                                          |
-| `feeding_plans`                         | food (optionally from catalog), amount, times                                                 |
-| `prevention_items`                      | deworming, flea & tick … with last date + interval → due date                                 |
-| `illnesses` / `illness_entries`         | illness course with daily entries                                                             |
-| `catalog_foods` / `catalog_medications` | shared catalog for quick entry                                                                |
-| `reminder_log`                          | sent reminders (prevents duplicates after restarts)                                           |
-| `schema_migrations`                     | applied migration files                                                                       |
+| Table                                   | Content                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------- |
+| `households`                            | name, invite code, per-household settings as JSON (`ntfy`, `notificationLocale`)        |
+| `users`                                 | accounts (`admin` / `user`), household, preferred language, `password_changed_at`       |
+| `settings`                              | instance settings as JSON (`requireLogin`, `allowRegistration`, `anonymousHouseholdId`) |
+| `pets`                                  | pets incl. household, photo file name and `archived` flag                               |
+| `health_entries`                        | weight, vet visits, vaccinations, observations                                          |
+| `medications` / `medication_doses`      | schedule (times of day, every _n_ days, start/end), stock; doses actually given         |
+| `appointments`                          | date/time, location, reminder offset                                                    |
+| `feeding_plans`                         | food (optionally from catalog), amount, times                                           |
+| `prevention_items`                      | deworming, flea & tick … with last date + interval → due date                           |
+| `illnesses` / `illness_entries`         | illness course with daily entries                                                       |
+| `catalog_foods` / `catalog_medications` | shared catalog for quick entry                                                          |
+| `reminder_log`                          | sent reminders (prevents duplicates after restarts)                                     |
+| `schema_migrations`                     | applied migration files                                                                 |
 
 ## Key flows
 
@@ -70,13 +74,23 @@ Every request loads the user from the database, so role changes and deleted
 accounts take effect immediately; tokens issued before a password change are
 rejected.
 
+**Household scoping.** `req.user.household_id` is loaded with the user on every
+request. The pet routes filter by it, and the generic per-pet router
+(`lib/crud.js`) first checks that `:petId` belongs to the caller's household –
+so health records, medications, doses, illnesses … of other households answer
+with `404 PET_NOT_FOUND`. The dashboard and reminder queries join `pets` and
+filter by household as well. Registration creates a new household, or joins
+one via its invite code; admins can move users between households.
+
 **Anonymous mode.** If the server runs with `ALLOW_ANONYMOUS_MODE=true` **and**
 an admin turns off "Require login", requests without a token act as a
-synthetic guest user with access to all data routes. `/api/admin/*` always
-requires a real admin token. See the README for the security implications.
+synthetic guest user with access to the data routes of one household (the
+household of the admin who turned the login off). `/api/admin/*` and
+`/api/household/*` always require a real login. See the README for the security implications.
 
-**Reminders.** `services/reminders.js` runs every `REMINDER_INTERVAL_SECONDS`.
-It looks 15 minutes back, computes due medication doses
+**Reminders.** `services/reminders.js` runs every `REMINDER_INTERVAL_SECONDS`
+and handles each household with ntfy enabled separately (own topic, own
+language). It looks 15 minutes back, computes due medication doses
 (`reminder-schedule.js`, timezone-aware via `TZ`), appointment reminders,
 prevention items due today (from 09:00) and low stock. Each reminder has a
 unique key that is inserted into `reminder_log` before sending – so every

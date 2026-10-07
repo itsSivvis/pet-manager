@@ -5,9 +5,9 @@
 <h1 align="center">Pet Manager</h1>
 
 <p align="center">
-  Self-hosted pet care manager for your household: health records, medication
-  schedules with push reminders, appointments, feeding plans, prevention and
-  illness timelines – in a friendly, installable web app.
+  Self-hosted pet care manager for your household – or several: health records,
+  medication schedules with push reminders, appointments, feeding plans,
+  prevention and illness timelines – in a friendly, installable web app.
 </p>
 
 <p align="center">
@@ -37,11 +37,12 @@ More screenshots (every page, theme and viewport) are in [`docs/screenshots`](do
 - 📅 **Appointments** with reminders, 🥣 **feeding plans**, 🛡️ **prevention** (deworming, flea & tick, vaccinations …) with due dates.
 - 📈 **Illness timelines** – daily entries with severity and temperature, "same as last entry", **PDF export** with preview.
 - 🏠 **Dashboard** – today's doses, upcoming appointments, due prevention, things that need attention.
-- 🔔 **Push reminders** via [ntfy](https://ntfy.sh) (self-hostable), in English or German.
+- 🔔 **Push reminders** via [ntfy](https://ntfy.sh) (self-hostable), in English or German – configured per household.
 - 🎨 **Themes** – Neutral Light, Neutral Dark, Playful and Meadow; follows your system's light/dark setting by default. WCAG AA contrast is enforced by tests.
 - 🌍 **English and German**, more languages are easy to add.
 - 📱 **Installable PWA**, mobile-first, pull-to-refresh, works great on phones.
-- 👥 **Multi-user household** – all accounts share the same pets; admin area for users, catalog and notifications.
+- 👥 **Multi-user households** – everyone in a household shares the same pets; invite family members with a link.
+- 🏘️ **Multiple households per instance** – several families on one server, each with separate pets, records and notifications; admin area for users, households and catalog.
 - 🔒 **Privacy-friendly** – your data stays on your server; no trackers, no external CDNs (fonts are self-hosted).
 
 ## Quick start (Docker)
@@ -88,7 +89,8 @@ For development see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## Configuration
 
 All settings are environment variables (see the commented [`.env.example`](.env.example)).
-ntfy, the login requirement and registration are configured in the web UI under **Administration**.
+The login requirement, registration, users and households are configured in the web UI under **Administration**;
+push notifications and invite links per household under **Settings**.
 
 | Variable                        | Default                                                      | Description                                                                                                                          |
 | ------------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -99,11 +101,12 @@ ntfy, the login requirement and registration are configured in the web UI under 
 | `PORT`                          | `3000`                                                       | Port the server listens on.                                                                                                          |
 | `APP_PORT`                      | `3000`                                                       | Host port published by Compose (bound to `127.0.0.1`).                                                                               |
 | `TZ`                            | `UTC`                                                        | Timezone for medication times, "today" and reminders (e.g. `Europe/Berlin`).                                                         |
-| `DEFAULT_LOCALE`                | `en`                                                         | Language of push notifications unless set in the admin area (`en`, `de`).                                                            |
+| `DEFAULT_LOCALE`                | `en`                                                         | Language of push notifications unless set for the household (`en`, `de`).                                                            |
 | `CLIENT_URL`                    | –                                                            | Allowed CORS origin(s), comma-separated. Only needed if the web app is served from another origin (e.g. the Vite dev server).        |
 | `TRUST_PROXY`                   | `0`                                                          | Number of reverse proxies in front of the app (use `1` behind Caddy/nginx/Traefik) – needed for correct client IPs in rate limiting. |
 | `JWT_EXPIRES_IN`                | `7d`                                                         | Session lifetime.                                                                                                                    |
 | `AUTH_RATE_LIMIT`               | `10`                                                         | Failed login/registration attempts per IP per 15 minutes.                                                                            |
+| `API_RATE_LIMIT`                | `1000`                                                       | API requests per IP per minute (all endpoints).                                                                                      |
 | `UPLOAD_DIR`                    | `server/uploads` (`/data/uploads` in Docker)                 | Where pet photos are stored.                                                                                                         |
 | `MAX_UPLOAD_MB`                 | `5`                                                          | Maximum photo size.                                                                                                                  |
 | `STATIC_DIR`                    | – (`/app/client/dist` in Docker)                             | Directory of the built web app served by the server.                                                                                 |
@@ -115,10 +118,43 @@ ntfy, the login requirement and registration are configured in the web UI under 
 ### Push notifications (ntfy)
 
 1. Install the [ntfy app](https://ntfy.sh) on your phone and subscribe to a topic with a hard-to-guess name (e.g. `pets-7f3a9c`), or use your own ntfy server.
-2. In Pet Manager go to **Administration → Push notifications**, enter the server URL (`https://ntfy.sh` or e.g. `https://ntfy.example.com`), the topic and – for protected topics – an access token.
+2. In Pet Manager go to **Settings → Push notifications**, enter the server URL (`https://ntfy.sh` or e.g. `https://ntfy.example.com`), the topic and – for protected topics – an access token.
 3. Click **Send test notification**.
 
+Every household has its own ntfy settings, so each family gets only the reminders for its own pets.
 Reminders are sent for due medication doses (not if already marked as given), appointments (configurable lead time), prevention items due today (from 09:00) and low stock.
+
+## Households
+
+One instance can host several households (e.g. families, neighbours, a pet
+sitter and their clients). Each household has its own pets with all records,
+its own dashboard and its own push notifications. Other households – including
+their administrators – cannot see them in the app.
+
+- **Setup:** the first account creates the first household (you can name it during setup).
+- **Adding family members:** under **Settings → Household → Invite someone**, create an
+  invite link and send it. Whoever opens it registers directly into your household –
+  this works even when open registration is closed. Create a new link to invalidate
+  the old one, or disable it when you are done.
+- **New families:** an admin either turns on **Allow new registrations** (every new
+  account then gets its own, empty household) or creates a household under
+  **Administration → Households** and sends its invite link.
+- **Moving accounts:** admins can move a user to another household in
+  **Administration → Users**. The change applies immediately.
+- **Deleting a household** is only possible once it has no members and permanently
+  deletes its pets and records.
+
+All members of a household have the same rights within it (pets, records,
+notifications, invite link). The administrator role is instance-wide and is about
+accounts and settings. The food and medication **catalog** is shared by all households.
+
+**Upgrading from a version without households:** nothing to do – the database
+migration moves all existing users and pets into one household and keeps your
+ntfy settings (now under **Settings**). Note that open registration now creates a
+_separate_ household per new account; use invite links to add people to yours.
+
+To load demo pets into a specific household, use
+`docker compose exec app node server/src/db/cli.js seed --household <id>`.
 
 ## Reverse proxy & HTTPS
 
@@ -195,7 +231,7 @@ To pin a version, set `PET_MANAGER_IMAGE=ghcr.io/itssivvis/pet-manager:0.1.0` in
 - **Run behind HTTPS** and keep the instance updated.
 - `JWT_SECRET` must be long and random; the server does not start in production without it. Changing it logs out all users.
 - The **first account becomes admin**. Registration is **closed** afterwards – the admin can open it under _Administration_. New accounts are always regular users.
-- All accounts share the same pets and records (one household per instance).
+- Pets and records are separated per **household**: accounts only see data of their own household (enforced on the server for every request). Invite links act like a password for joining a household – share them carefully and disable them when no longer needed.
 - Login and registration are **rate limited**, passwords need ≥ 10 characters and are hashed with bcrypt. Changing a password signs out all other sessions.
 - Uploaded photos are checked by their file content (JPEG/PNG/WebP/GIF), limited in size and stored under random names. They are accessible without login to anyone who knows the (unguessable) URL.
 
@@ -207,7 +243,7 @@ On a trusted home network you may want to use Pet Manager without logging in. Th
 2. As admin, switch off **Administration → Access & security → Require login**.
 
 > [!WARNING]
-> In anonymous mode **everyone who can reach the instance can read, change and delete all pets and records** – without an account.
+> In anonymous mode **everyone who can reach the instance can read, change and delete all pets and records** of the household of the admin who turned the login off – without an account.
 > **Never use it on an instance reachable from the internet** (port forwarding, public reverse proxy, tunnels).
 > The administration area always requires an admin login, so anonymous visitors cannot change instance settings.
 
@@ -228,7 +264,7 @@ Report vulnerabilities privately – see [SECURITY.md](SECURITY.md).
 
 Ideas for future versions – contributions welcome:
 
-- [ ] Multiple households per instance (separate data per family)
+- [x] Multiple households per instance (separate data per family)
 - [ ] Server-side image resizing/thumbnails
 - [ ] Calendar export (iCal) for appointments and doses
 - [ ] More notification channels (e-mail, Gotify, Web Push)

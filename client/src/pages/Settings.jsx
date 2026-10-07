@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import Alert from '@mui/material/Alert';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import Link from '@mui/material/Link';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
@@ -13,26 +11,11 @@ import { storage } from '../lib/storage.js';
 import { useAuth } from '../auth/AuthProvider.jsx';
 import { useErrorMessage } from '../lib/useErrorMessage.js';
 import PageHeader from '../components/PageHeader.jsx';
+import Section from '../components/Section.jsx';
 import ThemePicker from '../components/ThemePicker.jsx';
 import LanguagePicker from '../components/LanguagePicker.jsx';
-
-function Section({ title, description, children }) {
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" component="h2" sx={{ mb: description ? 0 : 2 }}>
-          {title}
-        </Typography>
-        {description && (
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            {description}
-          </Typography>
-        )}
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
+import HouseholdSection from './settings/HouseholdSection.jsx';
+import NotificationsSection from './settings/NotificationsSection.jsx';
 
 export default function Settings() {
   const { t } = useTranslation();
@@ -122,6 +105,8 @@ export default function Settings() {
                 </Button>
               </Stack>
             </Section>
+            <HouseholdSection />
+            <NotificationsSection />
           </>
         )}
         <Section title={t('settings.about')}>

@@ -1,12 +1,22 @@
 // Optional demo data. Everything here is fictional. No user accounts are
 // created: register the first account in the UI (it becomes the admin).
+// Pets go into the given household, by default the oldest one (created here
+// if the instance has none yet; the first account then adopts it).
 import { withTransaction } from './pool.js';
 import { addDays } from '../services/reminder-schedule.js';
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export async function seed(pool, { force = false } = {}) {
-  const { rows } = await pool.query('SELECT count(*)::int AS n FROM pets');
+export async function seed(pool, { force = false, householdId = null } = {}) {
+  const { rows: households } = await pool.query(
+    'SELECT id FROM households WHERE $1::int IS NULL OR id = $1 ORDER BY id LIMIT 1',
+    [householdId],
+  );
+  if (householdId != null && !households[0])
+    return { skipped: true, reason: `household ${householdId} does not exist` };
+  const { rows } = await pool.query('SELECT count(*)::int AS n FROM pets WHERE household_id = $1', [
+    households[0]?.id ?? null,
+  ]);
   if (rows[0].n > 0 && !force)
     return { skipped: true, reason: 'pets already exist (use --force to add demo data anyway)' };
 
@@ -19,7 +29,11 @@ export async function seed(pool, { force = false } = {}) {
   };
 
   return withTransaction(pool, async (c) => {
+    const household =
+      households[0]?.id ??
+      (await c.query("INSERT INTO households (name) VALUES ('Household') RETURNING id")).rows[0].id;
     const insert = async (table, data) => {
+      if (table === 'pets') data = { household_id: household, ...data };
       const cols = Object.keys(data);
       const res = await c.query(
         `INSERT INTO ${table} (${cols.join(', ')}) VALUES (${cols.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING id`,
@@ -285,6 +299,6 @@ export async function seed(pool, { force = false } = {}) {
       ended_on: d(-115),
     });
 
-    return { seeded: true, pets: 4 };
+    return { seeded: true, pets: 4, household };
   });
 }

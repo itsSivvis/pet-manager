@@ -13,7 +13,11 @@ export function signToken(config, user) {
  * environment switch ALLOW_ANONYMOUS_MODE and the admin setting must agree.
  */
 export async function isAnonymousModeActive(config, settings) {
-  return config.allowAnonymousMode && (await settings.get('requireLogin')) === false;
+  return (
+    config.allowAnonymousMode &&
+    (await settings.get('requireLogin')) === false &&
+    (await settings.get('anonymousHouseholdId')) != null
+  );
 }
 
 /**
@@ -23,7 +27,9 @@ export async function isAnonymousModeActive(config, settings) {
  * - Without a token, requests are rejected with 401 AUTH_REQUIRED, unless
  *   `allowAnonymous` is set for the route group AND anonymous mode is active.
  *   Anonymous requests get a synthetic user without admin rights, so the admin
- *   area always requires a real login, even in anonymous mode.
+ *   area always requires a real login, even in anonymous mode. They see the
+ *   household of the admin who switched the login requirement off.
+ * - `req.user.household_id` scopes all pet data to the user's household.
  */
 export function createAuth({ config, pool, settings }) {
   async function resolveUser(req) {
@@ -37,7 +43,7 @@ export function createAuth({ config, pool, settings }) {
       throw new ApiError(401, 'AUTH_INVALID_TOKEN', 'Invalid or expired token');
     }
     const { rows } = await pool.query(
-      'SELECT id, email, display_name, role, locale, password_changed_at FROM users WHERE id = $1',
+      'SELECT id, email, display_name, role, locale, household_id, password_changed_at FROM users WHERE id = $1',
       [Number(payload.sub)],
     );
     const user = rows[0];
@@ -66,7 +72,13 @@ export function createAuth({ config, pool, settings }) {
         return next();
       }
       if (allowAnonymous && (await isAnonymousModeActive(config, settings))) {
-        req.user = { id: null, role: 'user', anonymous: true, display_name: 'Guest' };
+        req.user = {
+          id: null,
+          role: 'user',
+          anonymous: true,
+          display_name: 'Guest',
+          household_id: await settings.get('anonymousHouseholdId'),
+        };
         return next();
       }
       throw new ApiError(401, 'AUTH_REQUIRED', 'Authentication required');
@@ -79,5 +91,13 @@ export function createAuth({ config, pool, settings }) {
     next();
   };
 
-  return { authenticate, requireAdmin, resolveUser };
+  // Household settings, invites and members are only for real accounts.
+  const requireAccount = (req, _res, next) => {
+    if (!req.user || req.user.anonymous) {
+      throw new ApiError(401, 'AUTH_REQUIRED', 'Authentication required');
+    }
+    next();
+  };
+
+  return { authenticate, requireAdmin, requireAccount, resolveUser };
 }
