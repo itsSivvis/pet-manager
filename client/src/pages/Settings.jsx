@@ -24,7 +24,7 @@ function Section({ title, description, children }) {
           {title}
         </Typography>
         {description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
             {description}
           </Typography>
         )}
@@ -84,7 +84,7 @@ export default function Settings() {
                   {t('common.save')}
                 </Button>
               </Stack>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 1.5 }}>
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1.5 }}>
                 {user.email}
               </Typography>
             </Section>

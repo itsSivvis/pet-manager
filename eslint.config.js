@@ -39,6 +39,16 @@ export default [
     rules: {
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+      // MUI 9 removed system props: color="text.secondary" silently falls back
+      // to the default color. Use variant names or sx={{ color: ... }}.
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='color'][value.value=/\\./]",
+          message:
+            'Use a variant name (textSecondary, warning, …) or sx={{ color: "text.secondary" }} – MUI 9 ignores theme paths in the color prop.',
+        },
+      ],
       // JSX usage is not tracked by core no-unused-vars without the React plugin.
       'no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^(_|[A-Z])' }],
     },

@@ -20,7 +20,7 @@ import { useTheme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import PictureAsPdfOutlinedIcon from '@mui/icons-material/PictureAsPdfOutlined';
 import { useTranslation } from 'react-i18next';
@@ -196,7 +196,7 @@ export default function IllnessDetail({ pet, illnessId }) {
                       label={t(`illness.status.${ill.status}`)}
                     />
                   </Stack>
-                  <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  <Typography variant="body2" color="textSecondary" sx={{ mt: 0.5 }}>
                     {formatDate(ill.started_on)}
                     {ill.ended_on && ` – ${formatDate(ill.ended_on)}`}
                   </Typography>
@@ -208,7 +208,7 @@ export default function IllnessDetail({ pet, illnessId }) {
                   {ill.notes && (
                     <Typography
                       variant="body2"
-                      color="text.secondary"
+                      color="textSecondary"
                       sx={{ mt: 1, whiteSpace: 'pre-wrap' }}
                     >
                       {ill.notes}

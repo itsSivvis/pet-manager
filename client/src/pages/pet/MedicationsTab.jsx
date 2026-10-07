@@ -34,7 +34,7 @@ function Doses({ petId, med }) {
   });
   if (!doses.data?.length) {
     return (
-      <Typography variant="body2" color="text.secondary" sx={{ py: 1 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ py: 1 }}>
         {t('medications.noDoses')}
       </Typography>
     );
@@ -129,7 +129,7 @@ function MedicationItem({ petId, med }) {
           />
         )}
       </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
         {t('medications.period', { start: formatDate(med.start_date) })}
         {med.end_date && ` – ${formatDate(med.end_date)}`}
       </Typography>

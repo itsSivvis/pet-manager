@@ -25,7 +25,7 @@ function Notes({ children }) {
   return (
     <Typography
       variant="body2"
-      color="text.secondary"
+      color="textSecondary"
       sx={{ mt: 0.5, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
     >
       {children}
@@ -78,7 +78,7 @@ export function HealthTab({ petId }) {
             sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}
           >
             <Chip size="small" label={t(`health.types.${e.type}`)} />
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {formatDate(e.date)}
             </Typography>
           </Stack>
@@ -143,7 +143,7 @@ export function AppointmentsTab({ petId }) {
             spacing={1}
             sx={{ alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}
           >
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {formatDateTime(a.starts_at)}
             </Typography>
             {a.done && (
@@ -282,7 +282,7 @@ export function PreventionTab({ petId }) {
               />
             </Stack>
             {p.product && <Typography variant="body2">{p.product}</Typography>}
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {p.last_date && t('prevention.lastOn', { date: formatDate(p.last_date) })}
               {due &&
                 ` · ${t('prevention.dueOn', { date: formatDate(due), relative: formatRelativeDays(due) })}`}

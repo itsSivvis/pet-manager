@@ -28,7 +28,7 @@ export default function EmptyState({ emoji = '🐾', title, description, action,
         <InboxOutlinedIcon aria-hidden sx={{ fontSize: compact ? 32 : 48, mb: 1, opacity: 0.7 }} />
       )}
       {title && (
-        <Typography variant={compact ? 'subtitle1' : 'h6'} color="text.primary" gutterBottom>
+        <Typography variant={compact ? 'subtitle1' : 'h6'} color="textPrimary" gutterBottom>
           {title}
         </Typography>
       )}
