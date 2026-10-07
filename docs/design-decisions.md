@@ -53,9 +53,11 @@ and served with `nosniff` and a sandboxing CSP.
 - **zod** for request validation (small, declarative, good error details).
 - **@tanstack/react-query** for server state (caching, refetch on focus,
   pull-to-refresh via `refetchQueries`) instead of hand-written fetch state.
-- **Vite 7 / ESLint 9 / React Router 7** were chosen over the newest majors
-  available at the time, which had just been released; Dependabot proposes the
-  upgrades.
+- **Major upgrades in coherent groups.** Packages that depend on each other
+  (e.g. Vite + plugin-react + Vitest, ESLint + its plugins, the MUI
+  packages) are upgraded together in one PR, verified with lint, tests,
+  e2e and a screenshot comparison. Single-package Dependabot PRs for such
+  groups are closed in favour of the grouped PR.
 - No image processing library (e.g. sharp): photos are stored as uploaded
   (max. 5 MB). Server-side resizing is on the roadmap.
 
