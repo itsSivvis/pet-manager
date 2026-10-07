@@ -209,7 +209,7 @@ export default function Dashboard() {
                             primary={`${d.name}${d.dose != null ? ` · ${formatNumber(d.dose)} ${d.unit ?? ''}` : ''}`}
                             secondary={`${d.pet_name} · ${doseDay(d.at)}${formatTime(d.at)}${d.overdue ? ` · ${t('dashboard.overdue')}` : ''}`}
                             slotProps={{
-                              secondary: { color: d.overdue ? 'warning.main' : 'text.secondary' },
+                              secondary: { color: d.overdue ? 'warning' : 'textSecondary' },
                             }}
                           />
                         </ListItem>

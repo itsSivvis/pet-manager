@@ -77,7 +77,7 @@ export default function Login({ mode: initialMode = 'login' }) {
             <Typography variant="h5" component="h1" gutterBottom>
               {t(`auth.title.${mode}`)}
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
               {t(`auth.subtitle.${mode}`)}
             </Typography>
             {error && (

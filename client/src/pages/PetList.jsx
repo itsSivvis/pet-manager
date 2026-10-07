@@ -90,7 +90,7 @@ export default function PetList() {
                           <Typography variant="h6" component="h2" noWrap>
                             {pet.name}
                           </Typography>
-                          <Typography variant="body2" color="text.secondary" noWrap>
+                          <Typography variant="body2" color="textSecondary" noWrap>
                             {[t(`species.${pet.species}`), pet.breed, formatAge(pet.birth_date, t)]
                               .filter(Boolean)
                               .join(' · ')}

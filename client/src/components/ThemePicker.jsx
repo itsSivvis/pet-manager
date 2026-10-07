@@ -88,7 +88,7 @@ export default function ThemePicker({ compact = false }) {
                 {selected && <CheckCircleIcon color="primary" fontSize="small" />}
               </Box>
               {!compact && (
-                <Typography variant="caption" color="text.secondary">
+                <Typography variant="caption" color="textSecondary">
                   {t(`themes.${id}.description`)}
                 </Typography>
               )}

@@ -20,7 +20,7 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import AddIcon from '@mui/icons-material/Add';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { DataGrid } from '@mui/x-data-grid';
 import { deDE } from '@mui/x-data-grid/locales';
@@ -43,7 +43,7 @@ function Section({ title, description, children }) {
           {title}
         </Typography>
         {description && (
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
             {description}
           </Typography>
         )}
@@ -96,7 +96,7 @@ function AccessSection({ settings, save }) {
             }
             label={t('admin.access.allowRegistration')}
           />
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             {t('admin.access.allowRegistrationHint')}
           </Typography>
         </Box>

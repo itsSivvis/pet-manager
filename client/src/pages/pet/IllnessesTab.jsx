@@ -35,7 +35,7 @@ export default function IllnessesTab({ petId }) {
               label={t(`illness.status.${i.status}`)}
             />
           </Stack>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             {formatDate(i.started_on)}
             {i.ended_on && ` – ${formatDate(i.ended_on)}`}
           </Typography>

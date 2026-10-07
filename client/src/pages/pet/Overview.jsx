@@ -11,7 +11,7 @@ import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import PhotoCameraOutlinedIcon from '@mui/icons-material/PhotoCameraOutlined';
 import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
 import UnarchiveOutlinedIcon from '@mui/icons-material/UnarchiveOutlined';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlineOutlined';
 import { useTranslation } from 'react-i18next';
 import { api, patch, del } from '../../api/client.js';
 import { usePetResource } from '../../api/hooks.js';
@@ -112,7 +112,7 @@ export default function Overview({ pet, onChanged }) {
           >
             {facts.map(([key, value]) => (
               <Box key={key} sx={{ display: 'contents' }}>
-                <Typography component="dt" variant="body2" color="text.secondary">
+                <Typography component="dt" variant="body2" color="textSecondary">
                   {t(key)}
                 </Typography>
                 <Typography component="dd" variant="body2" sx={{ m: 0, overflowWrap: 'anywhere' }}>
@@ -160,7 +160,7 @@ export default function Overview({ pet, onChanged }) {
           {health.list.data && health.list.data.filter((e) => e.weight_kg != null).length >= 2 ? (
             <WeightChart entries={health.list.data} height={260} />
           ) : (
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="textSecondary">
               {t('health.weightChartEmpty')}
             </Typography>
           )}

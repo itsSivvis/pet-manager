@@ -221,7 +221,7 @@ function TimesField({ field, value, onChange }) {
   };
   return (
     <Box>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+      <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
         {field.label}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1 }}>
@@ -239,7 +239,7 @@ function TimesField({ field, value, onChange }) {
       </Stack>
       <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
         {value.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" color="textSecondary">
             {t('form.noTimes')}
           </Typography>
         )}
@@ -252,7 +252,7 @@ function TimesField({ field, value, onChange }) {
         ))}
       </Box>
       {field.helperText && (
-        <Typography variant="caption" color="text.secondary">
+        <Typography variant="caption" color="textSecondary">
           {field.helperText}
         </Typography>
       )}
