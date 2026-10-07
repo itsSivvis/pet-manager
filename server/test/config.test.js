@@ -27,6 +27,10 @@ describe('loadConfig', () => {
     expect(c.staticDir.startsWith('/')).toBe(true);
     expect(c.uploadDir.startsWith('/')).toBe(true);
   });
+  it('limits API requests per IP generously by default', () => {
+    expect(loadConfig({}).apiRateLimit).toBe(1000);
+    expect(loadConfig({ API_RATE_LIMIT: '50' }).apiRateLimit).toBe(50);
+  });
   it('anonymous mode is off unless explicitly allowed', () => {
     expect(loadConfig({}).allowAnonymousMode).toBe(false);
     expect(loadConfig({ ALLOW_ANONYMOUS_MODE: 'true' }).allowAnonymousMode).toBe(true);

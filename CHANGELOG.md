@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Administration: list, create, rename and delete households; move users
   between households.
 - `seed` accepts `--household <id>`.
+- General per-IP rate limit for the API (`API_RATE_LIMIT`, default 1000
+  requests per minute).
 
 ### Changed
 

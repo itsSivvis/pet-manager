@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import { createTestContext, PASSWORD } from './helpers.js';
+import { createApp } from '../src/app.js';
 
 describe('anonymous mode (login requirement disabled)', () => {
   let ctx;
@@ -103,5 +104,18 @@ describe('anonymous mode (login requirement disabled)', () => {
     const res = await request(ctx.app).get('/api/household/settings').set(auth);
     expect(JSON.stringify(res.body)).not.toContain('tk_secret');
     expect(res.body.ntfy.hasToken).toBe(true);
+  });
+
+  it('rejects requests above API_RATE_LIMIT with RATE_LIMITED', async () => {
+    const app = createApp({
+      config: { ...ctx.config, apiRateLimit: 3 },
+      pool: ctx.pool,
+      settings: ctx.settings,
+      log: { error: () => {} },
+    });
+    for (let i = 0; i < 3; i++) await request(app).get('/api/auth/status').expect(200);
+    const res = await request(app).get('/api/auth/status');
+    expect(res.status).toBe(429);
+    expect(res.body.error.code).toBe('RATE_LIMITED');
   });
 });
