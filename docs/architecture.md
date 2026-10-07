@@ -3,7 +3,7 @@
 ```
  Browser (React PWA)                        Server (Node.js 22, Express 5)            PostgreSQL 16
 ┌──────────────────────────┐   /api/* JSON  ┌──────────────────────────────┐   pg    ┌──────────────┐
-│ React 19 + MUI 7         │ ─────────────▶ │ routes → zod validation      │ ──────▶ │ tables,      │
+│ React 19 + MUI 9         │ ─────────────▶ │ routes → zod validation      │ ──────▶ │ tables,      │
 │ React Router, React Query│ ◀───────────── │ auth (JWT) · helmet · CORS   │         │ migrations   │
 │ i18next (en/de)          │  /uploads/*    │ reminder scheduler (1/min) ──┼──▶ ntfy └──────────────┘
 │ theme tokens → MUI theme │ ◀───────────── │ static client (production)   │
