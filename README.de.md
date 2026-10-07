@@ -5,7 +5,7 @@
 <h1 align="center">Pet Manager</h1>
 
 <p align="center">
-  Selbst gehostete Haustierverwaltung für deinen Haushalt: Gesundheitsdaten,
+  Selbst gehostete Haustierverwaltung für deinen Haushalt – oder mehrere: Gesundheitsdaten,
   Medikamentenpläne mit Push-Erinnerungen, Termine, Futterpläne, Vorsorge und
   Krankheitsverläufe – in einer freundlichen, installierbaren Web-App.
 </p>
@@ -37,11 +37,12 @@ Weitere Screenshots (jede Seite, jedes Design, Mobil und Desktop) liegen in [`do
 - 📅 **Termine** mit Erinnerung, 🥣 **Futterpläne**, 🛡️ **Vorsorge** (Entwurmung, Floh & Zecke, Impfungen …) mit Fälligkeiten.
 - 📈 **Krankheitsverläufe** – tägliche Einträge mit Schweregrad und Temperatur, „wie letzter Eintrag", **PDF-Export** mit Vorschau.
 - 🏠 **Übersicht** – heute fällige Gaben, anstehende Termine, fällige Vorsorge, offene Punkte.
-- 🔔 **Push-Erinnerungen** über [ntfy](https://ntfy.sh) (selbst hostbar), auf Deutsch oder Englisch.
+- 🔔 **Push-Erinnerungen** über [ntfy](https://ntfy.sh) (selbst hostbar), auf Deutsch oder Englisch – pro Haushalt eingestellt.
 - 🎨 **Designs** – Neutral Hell, Neutral Dunkel, Verspielt und Wiese; folgt standardmäßig der Hell-/Dunkel-Einstellung des Systems. WCAG-AA-Kontraste werden per Test geprüft.
 - 🌍 **Deutsch und Englisch**, weitere Sprachen lassen sich leicht ergänzen.
 - 📱 **Installierbare PWA**, Mobile-first, Pull-to-Refresh.
-- 👥 **Mehrere Nutzer pro Haushalt** – alle Konten teilen sich dieselben Tiere; Admin-Bereich für Nutzer, Katalog und Benachrichtigungen.
+- 👥 **Mehrere Nutzer pro Haushalt** – alle im Haushalt teilen sich dieselben Tiere; Familienmitglieder per Link einladen.
+- 🏘️ **Mehrere Haushalte pro Instanz** – mehrere Familien auf einem Server, jeweils mit getrennten Tieren, Einträgen und Benachrichtigungen; Admin-Bereich für Nutzer, Haushalte und Katalog.
 - 🔒 **Datenschutzfreundlich** – deine Daten bleiben auf deinem Server; keine Tracker, keine externen CDNs (Schriften sind selbst gehostet).
 
 ## Schnellstart (Docker)
@@ -88,7 +89,8 @@ Für die Entwicklung siehe [CONTRIBUTING.md](CONTRIBUTING.md) (englisch).
 ## Konfiguration
 
 Alle Einstellungen sind Umgebungsvariablen (siehe die kommentierte [`.env.example`](.env.example)).
-ntfy, Anmeldepflicht und Registrierung werden in der Web-Oberfläche unter **Administration** eingestellt.
+Anmeldepflicht, Registrierung, Nutzer und Haushalte werden in der Web-Oberfläche unter **Administration** eingestellt;
+Push-Benachrichtigungen und Einladungslinks pro Haushalt unter **Einstellungen**.
 
 | Variable                        | Standard                                                     | Beschreibung                                                                                                                            |
 | ------------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -99,7 +101,7 @@ ntfy, Anmeldepflicht und Registrierung werden in der Web-Oberfläche unter **Adm
 | `PORT`                          | `3000`                                                       | Port, auf dem der Server lauscht.                                                                                                       |
 | `APP_PORT`                      | `3000`                                                       | Von Compose veröffentlichter Host-Port (an `127.0.0.1` gebunden).                                                                       |
 | `TZ`                            | `UTC`                                                        | Zeitzone für Medikamentenzeiten, „heute" und Erinnerungen (z. B. `Europe/Berlin`).                                                      |
-| `DEFAULT_LOCALE`                | `en`                                                         | Sprache der Push-Benachrichtigungen, falls nicht im Admin-Bereich gesetzt (`en`, `de`).                                                 |
+| `DEFAULT_LOCALE`                | `en`                                                         | Sprache der Push-Benachrichtigungen, falls nicht für den Haushalt gesetzt (`en`, `de`).                                                 |
 | `CLIENT_URL`                    | –                                                            | Erlaubte CORS-Origin(s), kommagetrennt. Nur nötig, wenn die Web-App von einer anderen Origin ausgeliefert wird (z. B. Vite-Dev-Server). |
 | `TRUST_PROXY`                   | `0`                                                          | Anzahl der Reverse Proxies vor der App (`1` hinter Caddy/nginx/Traefik) – nötig für korrekte Client-IPs beim Rate Limiting.             |
 | `JWT_EXPIRES_IN`                | `7d`                                                         | Gültigkeit einer Anmeldung.                                                                                                             |
@@ -115,10 +117,45 @@ ntfy, Anmeldepflicht und Registrierung werden in der Web-Oberfläche unter **Adm
 ### Push-Benachrichtigungen (ntfy)
 
 1. Die [ntfy-App](https://ntfy.sh) installieren und ein Topic mit schwer zu erratendem Namen abonnieren (z. B. `pets-7f3a9c`) – oder einen eigenen ntfy-Server nutzen.
-2. In Pet Manager unter **Administration → Push-Benachrichtigungen** die Server-URL (`https://ntfy.sh` oder z. B. `https://ntfy.example.com`), das Topic und – bei geschützten Topics – ein Zugriffstoken eintragen.
+2. In Pet Manager unter **Einstellungen → Push-Benachrichtigungen** die Server-URL (`https://ntfy.sh` oder z. B. `https://ntfy.example.com`), das Topic und – bei geschützten Topics – ein Zugriffstoken eintragen.
 3. **Testbenachrichtigung senden** klicken.
 
+Jeder Haushalt hat eigene ntfy-Einstellungen, jede Familie bekommt also nur die Erinnerungen für ihre eigenen Tiere.
 Erinnert wird an fällige Medikamentengaben (nicht, wenn schon abgehakt), Termine (Vorlauf einstellbar), heute fällige Vorsorge (ab 09:00) und knappen Bestand.
+
+## Haushalte
+
+Eine Instanz kann mehrere Haushalte beherbergen (z. B. Familien, Nachbarn, eine
+Tiersitterin und ihre Kundschaft). Jeder Haushalt hat eigene Tiere samt aller
+Einträge, eine eigene Übersicht und eigene Push-Benachrichtigungen. Andere
+Haushalte – auch deren Administratoren – sehen sie in der App nicht.
+
+- **Einrichtung:** Das erste Konto legt den ersten Haushalt an (der Name lässt sich bei der Einrichtung vergeben).
+- **Familienmitglieder hinzufügen:** Unter **Einstellungen → Haushalt → Jemanden einladen** einen
+  Einladungslink erstellen und verschicken. Wer ihn öffnet, registriert sich direkt in deinem
+  Haushalt – auch wenn die offene Registrierung geschlossen ist. Ein neuer Link macht den alten
+  ungültig; nicht mehr benötigte Links deaktivieren.
+- **Neue Familien:** Ein Admin schaltet entweder **Neue Registrierungen erlauben** ein (jedes neue
+  Konto bekommt dann einen eigenen, leeren Haushalt) oder legt unter **Administration → Haushalte**
+  einen Haushalt an und verschickt dessen Einladungslink.
+- **Konten verschieben:** Admins können Nutzer unter **Administration → Benutzer** einem anderen
+  Haushalt zuordnen. Die Änderung gilt sofort.
+- **Einen Haushalt löschen** geht erst, wenn er keine Mitglieder mehr hat, und löscht seine Tiere und
+  Einträge endgültig.
+
+Alle Mitglieder eines Haushalts haben darin dieselben Rechte (Tiere, Einträge,
+Benachrichtigungen, Einladungslink). Die Administrator-Rolle gilt für die ganze
+Instanz und betrifft Konten und Einstellungen. Der **Katalog** für Futter und
+Medikamente wird von allen Haushalten gemeinsam genutzt.
+
+**Update von einer Version ohne Haushalte:** Nichts zu tun – die
+Datenbank-Migration verschiebt alle bestehenden Nutzer und Tiere in einen
+Haushalt und übernimmt die ntfy-Einstellungen (jetzt unter **Einstellungen**).
+Beachte: Die offene Registrierung legt jetzt pro neuem Konto einen _eigenen_
+Haushalt an; um Personen zu deinem Haushalt hinzuzufügen, nutze Einladungslinks.
+
+Demo-Tiere in einen bestimmten Haushalt laden:
+`docker compose exec app node server/src/db/cli.js seed --household <id>`.
 
 ## Reverse Proxy & HTTPS
 
@@ -195,7 +232,7 @@ Eine feste Version: `PET_MANAGER_IMAGE=ghcr.io/itssivvis/pet-manager:0.1.0` in d
 - **Nur hinter HTTPS** betreiben und die Instanz aktuell halten.
 - `JWT_SECRET` muss lang und zufällig sein; ohne startet der Server in Produktion nicht. Eine Änderung meldet alle Nutzer ab.
 - Das **erste Konto wird Admin**. Danach ist die Registrierung **geschlossen** – der Admin kann sie unter _Administration_ öffnen. Neue Konten sind immer normale Nutzer.
-- Alle Konten teilen sich dieselben Tiere und Einträge (ein Haushalt pro Instanz).
+- Tiere und Einträge sind pro **Haushalt** getrennt: Konten sehen nur die Daten ihres eigenen Haushalts (bei jeder Anfrage serverseitig erzwungen). Einladungslinks wirken wie ein Passwort zum Beitreten – sorgsam teilen und deaktivieren, wenn sie nicht mehr gebraucht werden.
 - Anmeldung und Registrierung sind **ratenbegrenzt**, Passwörter brauchen ≥ 10 Zeichen und werden mit bcrypt gehasht. Eine Passwortänderung meldet alle anderen Sitzungen ab.
 - Fotos werden anhand ihres Inhalts geprüft (JPEG/PNG/WebP/GIF), in der Größe begrenzt und unter Zufallsnamen gespeichert. Wer die (nicht erratbare) URL kennt, kann sie ohne Anmeldung abrufen.
 
@@ -207,7 +244,7 @@ Im vertrauenswürdigen Heimnetz möchtest du Pet Manager vielleicht ohne Anmeldu
 2. Als Admin **Administration → Zugang & Sicherheit → Anmeldung erforderlich** ausschalten.
 
 > [!WARNING]
-> Im anonymen Modus kann **jede Person, die die Instanz erreicht, alle Tiere und Einträge lesen, ändern und löschen** – ohne Konto.
+> Im anonymen Modus kann **jede Person, die die Instanz erreicht, alle Tiere und Einträge des Haushalts lesen, ändern und löschen**, dessen Admin die Anmeldepflicht abgeschaltet hat – ohne Konto.
 > **Niemals auf einer Instanz verwenden, die aus dem Internet erreichbar ist** (Portweiterleitung, öffentlicher Reverse Proxy, Tunnel).
 > Der Administrationsbereich erfordert immer eine Admin-Anmeldung; anonyme Besucher können also keine Instanz-Einstellungen ändern.
 
@@ -230,7 +267,7 @@ Die technische Dokumentation ist auf Englisch:
 
 Ideen für kommende Versionen – Beiträge willkommen:
 
-- [ ] Mehrere Haushalte pro Instanz (getrennte Daten je Familie)
+- [x] Mehrere Haushalte pro Instanz (getrennte Daten je Familie)
 - [ ] Serverseitige Bildverkleinerung/Vorschaubilder
 - [ ] Kalender-Export (iCal) für Termine und Gaben
 - [ ] Weitere Benachrichtigungskanäle (E-Mail, Gotify, Web Push)

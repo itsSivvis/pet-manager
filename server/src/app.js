@@ -12,6 +12,7 @@ import { petResourceRouter } from './lib/crud.js';
 import { medicationsRouter } from './routes/medications.js';
 import { illnessesRouter } from './routes/illnesses.js';
 import { adminRouter } from './routes/admin.js';
+import { householdRouter } from './routes/household.js';
 import { catalogRouter } from './routes/catalog.js';
 import { dashboardRouter } from './routes/dashboard.js';
 import {
@@ -115,6 +116,8 @@ export function createApp({ config, pool, settings = createSettingsStore(pool), 
   data.use('/pets/:petId/illnesses', illnessesRouter(deps));
   app.use('/api', data);
 
+  // The own household (members, invites, notifications) needs a real login.
+  app.use('/api/household', auth.authenticate(), auth.requireAccount, householdRouter(deps));
   // The admin area always needs a real (non-anonymous) admin login.
   app.use('/api/admin', auth.authenticate(), auth.requireAdmin, adminRouter(deps));
 

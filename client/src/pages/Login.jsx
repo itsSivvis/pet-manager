@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navigate, Link as RouterLink, useLocation } from 'react-router';
+import { Navigate, Link as RouterLink, useLocation, useSearchParams } from 'react-router';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -16,13 +16,25 @@ import Logo from '../components/Logo.jsx';
 import ThemePicker from '../components/ThemePicker.jsx';
 import LanguagePicker from '../components/LanguagePicker.jsx';
 
-/** Login, registration and first-run setup (first account becomes admin). */
+/**
+ * Login, registration and first-run setup (first account becomes admin).
+ * Registration either creates a new household or – with an invite code
+ * (/register?invite=…) – joins an existing one, even if registration is closed.
+ */
 export default function Login({ mode: initialMode = 'login' }) {
   const { t, i18n } = useTranslation();
   const auth = useAuth();
   const errorMessage = useErrorMessage();
   const location = useLocation();
-  const [form, setForm] = useState({ email: '', password: '', display_name: '' });
+  const [searchParams] = useSearchParams();
+  const invited = searchParams.has('invite');
+  const [form, setForm] = useState({
+    email: '',
+    password: '',
+    display_name: '',
+    household_name: '',
+    invite_code: searchParams.get('invite') ?? '',
+  });
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -32,16 +44,25 @@ export default function Login({ mode: initialMode = 'login' }) {
     return <Navigate to={location.state?.from ?? '/'} replace />;
 
   const isRegister = mode !== 'login';
-  if (mode === 'register' && auth.status && !auth.status.registrationOpen)
+  if (mode === 'register' && auth.status && !auth.status.registrationOpen && !invited)
     return <Navigate to="/login" replace />;
+  const joining = mode === 'register' && form.invite_code.trim() !== '';
 
   async function submit(e) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
-      if (isRegister) await auth.register({ ...form, locale: i18n.resolvedLanguage });
-      else await auth.login(form.email, form.password);
+      if (isRegister) {
+        const { household_name, invite_code, ...data } = form;
+        await auth.register({
+          ...data,
+          locale: i18n.resolvedLanguage,
+          ...(joining
+            ? { invite_code: invite_code.trim() }
+            : household_name.trim() && { household_name: household_name.trim() }),
+        });
+      } else await auth.login(form.email, form.password);
     } catch (err) {
       setError(err);
     } finally {
@@ -106,12 +127,26 @@ export default function Login({ mode: initialMode = 'login' }) {
                   autoComplete: isRegister ? 'new-password' : 'current-password',
                   helperText: isRegister ? t('auth.passwordHint') : undefined,
                 })}
+                {mode === 'register' &&
+                  field('invite_code', {
+                    label: t('auth.inviteCode'),
+                    autoComplete: 'off',
+                    helperText: t('auth.inviteCodeHint'),
+                  })}
+                {isRegister &&
+                  !joining &&
+                  field('household_name', {
+                    label: t('auth.householdName'),
+                    placeholder: t('auth.householdNamePlaceholder'),
+                    autoComplete: 'off',
+                    helperText: t('auth.householdNameHint'),
+                  })}
                 <Button type="submit" variant="contained" size="large" disabled={busy}>
                   {t(`auth.submit.${mode}`)}
                 </Button>
               </Stack>
             </Box>
-            {!setupRequired && auth.status?.registrationOpen && (
+            {!setupRequired && (auth.status?.registrationOpen || mode === 'register') && (
               <Typography variant="body2" sx={{ mt: 2, textAlign: 'center' }}>
                 {mode === 'login' ? (
                   <Link component={RouterLink} to="/register">

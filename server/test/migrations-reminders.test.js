@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createPool } from '../src/db/pool.js';
 import { migrate } from '../src/db/migrate.js';
-import { createSettingsStore } from '../src/services/settings.js';
+import { setHouseholdSettings } from '../src/services/households.js';
 import { runReminders } from '../src/services/reminders.js';
 import { seed } from '../src/db/seed.js';
 import { TEST_DATABASE_URL } from './helpers.js';
@@ -36,12 +36,11 @@ describe('migrations', () => {
 
 describe('reminders', () => {
   it('sends each due reminder exactly once, localized', async () => {
-    const settings = createSettingsStore(pool);
-    await settings.set({
+    const { rows } = await pool.query("SELECT id, household_id FROM pets WHERE name = 'Biscuit'");
+    await setHouseholdSettings(pool, rows[0].household_id, {
       ntfy: { enabled: true, url: 'https://ntfy.example.com', topic: 'pets', token: '' },
       notificationLocale: 'de',
     });
-    const { rows } = await pool.query("SELECT id FROM pets WHERE name = 'Biscuit'");
     await pool.query(
       `INSERT INTO medications (pet_id, name, dose, unit, times, start_date)
        VALUES ($1, 'Testmed', 1, 'tablet', '{12:00}', '2026-01-01')`,
@@ -51,16 +50,15 @@ describe('reminders', () => {
     const send = async (_ntfy, msg) => sent.push(msg);
     const config = { timezone: 'UTC', defaultLocale: 'en' };
     const now = new Date('2026-06-01T12:05:00Z');
-    await runReminders({ pool, settings, config, now, send });
+    await runReminders({ pool, config, now, send });
     const med = sent.find((m) => m.message.includes('Testmed'));
     expect(med.title).toBe('Medikament fällig: Biscuit');
     const count = sent.length;
-    await runReminders({ pool, settings, config, now, send });
+    await runReminders({ pool, config, now, send });
     expect(sent.length).toBe(count);
   });
 
   it('retries a reminder if sending failed', async () => {
-    const settings = createSettingsStore(pool);
     const config = { timezone: 'UTC', defaultLocale: 'en' };
     const now = new Date('2026-06-02T12:05:00Z');
     let fail = true;
@@ -69,9 +67,9 @@ describe('reminders', () => {
       if (fail) throw new Error('offline');
       sent.push(msg);
     };
-    await runReminders({ pool, settings, config, now, send, log: { warn: () => {} } });
+    await runReminders({ pool, config, now, send, log: { warn: () => {} } });
     fail = false;
-    await runReminders({ pool, settings, config, now, send });
+    await runReminders({ pool, config, now, send });
     expect(sent.some((m) => m.message.includes('Testmed'))).toBe(true);
   });
 });

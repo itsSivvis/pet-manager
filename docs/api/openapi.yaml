@@ -8,7 +8,11 @@ info:
     **Authentication:** send `Authorization: Bearer <token>` (from `/auth/login`
     or `/auth/register`). Data endpoints also work without a token when the
     instance runs in anonymous mode (see README). `/admin/*` always requires an
-    admin token.
+    admin token, `/household/*` a real (non-anonymous) login.
+
+    **Households:** every account and every pet belongs to one household. All
+    pet data is scoped to the caller's household; pets of other households
+    answer with `404 PET_NOT_FOUND`.
 
     **Errors** always have the shape `{ "error": { "code", "message", "details" } }`.
     `code` is stable (e.g. `AUTH_INVALID_CREDENTIALS`, `VALIDATION_FAILED`,
@@ -30,6 +34,8 @@ tags:
     description: Per-pet records (health, medications, appointments, feeding, prevention, illnesses)
   - name: dashboard
   - name: catalog
+  - name: household
+    description: The caller's own household (members, invite link, notifications)
   - name: admin
   - name: system
 
@@ -68,7 +74,11 @@ paths:
     post:
       tags: [auth]
       summary: Register (the first account becomes admin)
-      description: Rate limited. After the first account, only possible if an admin allowed registration.
+      description: >-
+        Rate limited. The first account becomes admin and gets the first household.
+        With `invite_code` the account joins that household (works even when
+        registration is closed). Otherwise a new household is created, which is
+        only possible if an admin allowed registration.
       security: []
       requestBody:
         required: true
@@ -82,6 +92,9 @@ paths:
                 password: { type: string, minLength: 10, description: max. 72 bytes }
                 display_name: { type: string, maxLength: 100 }
                 locale: { $ref: '#/components/schemas/Locale' }
+                household_name:
+                  { type: string, maxLength: 100, description: Name of the new household }
+                invite_code: { type: string, description: Join an existing household }
       responses:
         '201': { $ref: '#/components/responses/Session' }
         '400': { $ref: '#/components/responses/Error' }
@@ -477,30 +490,75 @@ paths:
       responses:
         '204': { description: Deleted }
 
-  /admin/settings:
+  /household:
     get:
-      tags: [admin]
-      summary: Instance settings (the ntfy token is never returned)
+      tags: [household]
+      summary: Own household with members and invite code
       responses:
         '200':
           {
             description: OK,
-            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+            content: { application/json: { schema: { $ref: '#/components/schemas/Household' } } },
           }
         '401': { $ref: '#/components/responses/Error' }
-        '403': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [household]
+      summary: Rename the own household
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [name],
+                properties: { name: { type: string, maxLength: 100 } },
+              }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Household' } } },
+          }
+  /household/invite:
+    post:
+      tags: [household]
+      summary: Create or replace the invite code
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Household' } } },
+          }
+    delete:
+      tags: [household]
+      summary: Disable the invite code
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Household' } } },
+          }
+  /household/settings:
+    get:
+      tags: [household]
+      summary: Notification settings of the own household (the ntfy token is never returned)
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/HouseholdSettings' } } },
+          }
     put:
-      tags: [admin]
-      summary: Update instance settings
-      description: '`requireLogin: false` is rejected with `ANONYMOUS_MODE_NOT_ALLOWED` unless the server runs with `ALLOW_ANONYMOUS_MODE=true`. Omit `ntfy.token` to keep the stored token, send an empty string to remove it.'
+      tags: [household]
+      summary: Update the notification settings of the own household
+      description: Omit `ntfy.token` to keep the stored token, send an empty string to remove it.
       requestBody:
         content:
           application/json:
             schema:
               type: object
               properties:
-                requireLogin: { type: boolean }
-                allowRegistration: { type: boolean }
                 notificationLocale:
                   { oneOf: [{ $ref: '#/components/schemas/Locale' }, { type: 'null' }] }
                 ntfy:
@@ -515,17 +573,50 @@ paths:
         '200':
           {
             description: OK,
-            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/HouseholdSettings' } } },
           }
         '400': { $ref: '#/components/responses/Error' }
-  /admin/ntfy/test:
+  /household/ntfy/test:
     post:
-      tags: [admin]
-      summary: Send a test notification
+      tags: [household]
+      summary: Send a test notification to the household's ntfy topic
       responses:
         '200': { description: Sent }
         '400': { $ref: '#/components/responses/Error' }
         '502': { $ref: '#/components/responses/Error' }
+
+  /admin/settings:
+    get:
+      tags: [admin]
+      summary: Instance settings
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+          }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    put:
+      tags: [admin]
+      summary: Update instance settings
+      description: '`requireLogin: false` is rejected with `ANONYMOUS_MODE_NOT_ALLOWED` unless the server runs with `ALLOW_ANONYMOUS_MODE=true`. Anonymous visitors then see the household of the admin who sent the request.'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                requireLogin: { type: boolean }
+                allowRegistration: { type: boolean }
+      responses:
+        '200':
+          {
+            description: OK,
+            content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } },
+          }
+        '400': { $ref: '#/components/responses/Error' }
   /admin/users:
     get:
       tags: [admin]
@@ -544,16 +635,15 @@ paths:
     parameters: [{ $ref: '#/components/parameters/id' }]
     patch:
       tags: [admin]
-      summary: Change a user's role
+      summary: Change a user's role and/or move them to another household
       requestBody:
         content:
           application/json:
             schema:
-              {
-                type: object,
-                required: [role],
-                properties: { role: { type: string, enum: [admin, user] } },
-              }
+              type: object
+              properties:
+                role: { type: string, enum: [admin, user] }
+                household_id: { type: integer }
       responses:
         '200':
           {
@@ -565,6 +655,68 @@ paths:
       summary: Delete a user (not yourself)
       responses:
         '204': { description: Deleted }
+  /admin/households:
+    get:
+      tags: [admin]
+      summary: List all households with member and pet counts
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              {
+                application/json:
+                  {
+                    schema: { type: array, items: { $ref: '#/components/schemas/AdminHousehold' } },
+                  },
+              },
+          }
+    post:
+      tags: [admin]
+      summary: Create an empty household (with an invite code)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [name],
+                properties: { name: { type: string, maxLength: 100 } },
+              }
+      responses:
+        '201':
+          {
+            description: Created,
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/AdminHousehold' } } },
+          }
+  /admin/households/{id}:
+    parameters: [{ $ref: '#/components/parameters/id' }]
+    patch:
+      tags: [admin]
+      summary: Rename a household
+      requestBody:
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [name],
+                properties: { name: { type: string, maxLength: 100 } },
+              }
+      responses:
+        '200':
+          {
+            description: OK,
+            content:
+              { application/json: { schema: { $ref: '#/components/schemas/AdminHousehold' } } },
+          }
+    delete:
+      tags: [admin]
+      summary: Delete a household without members, including all of its pets and records
+      responses:
+        '204': { description: Deleted }
+        '409': { $ref: '#/components/responses/Error' }
 
 components:
   securitySchemes:
@@ -628,6 +780,32 @@ components:
         display_name: { type: string }
         role: { type: string, enum: [admin, user] }
         locale: { $ref: '#/components/schemas/Locale' }
+        household_id: { type: integer }
+    Household:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        invite_code: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              email: { type: string }
+              display_name: { type: string }
+              role: { type: string, enum: [admin, user] }
+    AdminHousehold:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        invite_code: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        member_count: { type: integer }
+        pet_count: { type: integer }
     Species: { type: string, enum: [dog, cat, rabbit, rodent, bird, fish, reptile, horse, other] }
     PetInput:
       type: object
@@ -773,8 +951,13 @@ components:
       properties:
         requireLogin: { type: boolean }
         allowRegistration: { type: boolean }
-        notificationLocale: { oneOf: [{ $ref: '#/components/schemas/Locale' }, { type: 'null' }] }
+        anonymousHouseholdId:
+          { type: [integer, 'null'], description: Household anonymous visitors see }
         anonymousModeAllowed: { type: boolean }
+    HouseholdSettings:
+      type: object
+      properties:
+        notificationLocale: { oneOf: [{ $ref: '#/components/schemas/Locale' }, { type: 'null' }] }
         ntfy:
           type: object
           properties:

@@ -97,14 +97,19 @@
     },
     "subtitle": {
       "login": "Melde dich an, um deine Tiere zu sehen.",
-      "register": "Registriere dich, um eure Tiere gemeinsam zu verwalten.",
+      "register": "Registriere dich, um deine Tiere zu verwalten – im eigenen Haushalt oder in einem, zu dem du eingeladen wurdest.",
       "setup": "Lege das erste Konto an. Es wird zum Administrator."
     },
     "submit": {
       "login": "Anmelden",
       "register": "Registrieren",
       "setup": "Administrator-Konto anlegen"
-    }
+    },
+    "inviteCode": "Einladungscode (optional)",
+    "inviteCodeHint": "Einladungslink von deiner Familie bekommen? Mit dem Code trittst du ihrem Haushalt bei.",
+    "householdName": "Name des Haushalts",
+    "householdNamePlaceholder": "z. B. Familie Müller",
+    "householdNameHint": "Deine Tiere und Einträge sind nur für Mitglieder deines Haushalts sichtbar."
   },
   "dashboard": {
     "greetingMorning": "Guten Morgen {{name}}",
@@ -319,19 +324,20 @@
     "license": "Open Source unter der MIT-Lizenz",
     "sourceCode": "Quellcode"
   },
-  "admin": {
-    "title": "Administration",
-    "subtitle": "Einstellungen für diese Pet-Manager-Instanz.",
-    "access": {
-      "title": "Zugang & Sicherheit",
-      "requireLogin": "Anmeldung erforderlich",
-      "howItWorksTitle": "Was passiert ohne Anmeldung?",
-      "howItWorks": "Ist die Anmeldepflicht aus, kann jede Person, die diese Instanz erreicht, alle Tiere und Einträge ohne Konto sehen und ändern. Der Administrationsbereich erfordert immer eine Administrator-Anmeldung. Schalte die Pflicht nur in einem privaten Netz aus, dem du vollständig vertraust.",
-      "envHint": "Das Abschalten der Anmeldepflicht ist auf diesem Server gesperrt. Um es zu erlauben, muss der Server gestartet werden mit",
-      "warningTitle": "Anmeldung ist derzeit NICHT erforderlich",
-      "warning": "Jede Person, die diese Instanz erreicht, hat vollen Zugriff auf alle Daten. Nutze diesen Modus niemals auf einer Instanz, die aus dem Internet erreichbar ist.",
-      "allowRegistration": "Neue Registrierungen erlauben",
-      "allowRegistrationHint": "Wenn aus, können sich nur bestehende Konten anmelden. Neue Konten sind immer normale Nutzer."
+  "household": {
+    "title": "Haushalt",
+    "description": "Alle in deinem Haushalt sehen und verwalten dieselben Tiere. Andere Haushalte auf diesem Server sehen sie nicht.",
+    "name": "Name des Haushalts",
+    "members": "Mitglieder",
+    "invite": {
+      "title": "Jemanden einladen",
+      "description": "Mit diesem Link kann jeder ein Konto in deinem Haushalt anlegen – auch wenn die Registrierung geschlossen ist. Teile ihn nur mit Personen, denen du vertraust, und deaktiviere ihn, wenn du ihn nicht mehr brauchst.",
+      "link": "Einladungslink",
+      "create": "Einladungslink erstellen",
+      "renew": "Neuer Link",
+      "disable": "Link deaktivieren",
+      "copy": "Link kopieren",
+      "copied": "Kopiert!"
     },
     "ntfy": {
       "title": "Push-Benachrichtigungen (ntfy)",
@@ -348,6 +354,21 @@
       "languageDefault": "Server-Standard",
       "test": "Testbenachrichtigung senden",
       "testSent": "Testbenachrichtigung gesendet."
+    }
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Einstellungen für diese Pet-Manager-Instanz.",
+    "access": {
+      "title": "Zugang & Sicherheit",
+      "requireLogin": "Anmeldung erforderlich",
+      "howItWorksTitle": "Was passiert ohne Anmeldung?",
+      "howItWorks": "Ist die Anmeldepflicht aus, kann jede Person, die diese Instanz erreicht, alle Tiere und Einträge deines Haushalts ohne Konto sehen und ändern. Der Administrationsbereich erfordert immer eine Administrator-Anmeldung. Schalte die Pflicht nur in einem privaten Netz aus, dem du vollständig vertraust.",
+      "envHint": "Das Abschalten der Anmeldepflicht ist auf diesem Server gesperrt. Um es zu erlauben, muss der Server gestartet werden mit",
+      "warningTitle": "Anmeldung ist derzeit NICHT erforderlich",
+      "warning": "Jede Person, die diese Instanz erreicht, hat vollen Zugriff auf alle Daten. Nutze diesen Modus niemals auf einer Instanz, die aus dem Internet erreichbar ist.",
+      "allowRegistration": "Neue Registrierungen erlauben",
+      "allowRegistrationHint": "Wenn an, kann sich jede Person registrieren und bekommt einen neuen, leeren Haushalt. Einladungslinks funktionieren in beiden Fällen. Neue Konten sind immer normale Nutzer."
     },
     "users": {
       "title": "Benutzer",
@@ -358,11 +379,21 @@
         "admin": "Admin"
       },
       "deleteTitle": "{{name}} löschen?",
-      "deleteText": "Das Konto wird entfernt. Tiere und Einträge sind gemeinsam und bleiben erhalten."
+      "deleteText": "Das Konto wird entfernt. Tiere und Einträge gehören dem Haushalt und bleiben für die anderen Mitglieder erhalten.",
+      "household": "Haushalt"
+    },
+    "households": {
+      "title": "Haushalte",
+      "description": "Jeder Haushalt hat eigene Tiere, Einträge und Push-Benachrichtigungen. Über den Einladungslink kann eine neue Familie einem leeren Haushalt beitreten, oder du verschiebst oben bestehende Benutzer.",
+      "add": "Neuer Haushalt",
+      "counts": "{{members}} Mitglied(er) · {{pets}} Tier(e)",
+      "notEmpty": "Verschiebe oder lösche zuerst die Mitglieder",
+      "deleteTitle": "{{name}} löschen?",
+      "deleteText": "Der Haushalt und alle seine {{count}} Tier(e) samt Einträgen werden endgültig gelöscht."
     },
     "catalog": {
       "title": "Katalog",
-      "description": "Hier gepflegte Futtersorten und Medikamente lassen sich in den Formularen aller Tiere schnell auswählen.",
+      "description": "Hier gepflegte Futtersorten und Medikamente lassen sich in den Formularen aller Haushalte schnell auswählen.",
       "foods": "Futter",
       "medications": "Medikamente",
       "brand": "Marke",
@@ -416,6 +447,9 @@
     "ILLNESS_NOT_FOUND": "Diese Krankheit existiert nicht (mehr).",
     "ILLNESS_ENTRY_NOT_FOUND": "Dieser Eintrag existiert nicht (mehr).",
     "USER_NOT_FOUND": "Dieser Benutzer existiert nicht (mehr).",
-    "CATALOG_ITEM_NOT_FOUND": "Dieser Katalogeintrag existiert nicht (mehr)."
+    "CATALOG_ITEM_NOT_FOUND": "Dieser Katalogeintrag existiert nicht (mehr).",
+    "INVITE_INVALID": "Dieser Einladungscode ist ungültig oder nicht mehr aktiv.",
+    "HOUSEHOLD_NOT_FOUND": "Dieser Haushalt existiert nicht (mehr).",
+    "HOUSEHOLD_NOT_EMPTY": "Der Haushalt hat noch Mitglieder. Verschiebe oder lösche sie zuerst."
   }
 }

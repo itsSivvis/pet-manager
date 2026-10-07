@@ -2,103 +2,96 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { ApiError } from '../lib/errors.js';
 import { parse, idParam } from '../lib/validate.js';
-import { sendNtfy } from '../services/ntfy.js';
-import { t } from '../i18n/messages.js';
-
-const httpUrl = z
-  .string()
-  .trim()
-  .url()
-  .refine((u) => /^https?:\/\//i.test(u), 'Only http(s) URLs are allowed');
+import { removeUpload } from '../lib/image.js';
+import { createHousehold, newInviteCode } from '../services/households.js';
+import { householdName } from './household.js';
 
 const settingsSchema = z.object({
   requireLogin: z.boolean().optional(),
   allowRegistration: z.boolean().optional(),
-  notificationLocale: z.enum(['en', 'de']).nullable().optional(),
-  ntfy: z
-    .object({
-      enabled: z.boolean(),
-      url: httpUrl,
-      topic: z
-        .string()
-        .trim()
-        .max(64)
-        .regex(/^[\w-]*$/, 'Letters, digits, - and _ only'),
-      // undefined = keep the stored token, '' = remove it
-      token: z.string().max(200).optional(),
-    })
-    .optional(),
 });
 
-/** Never send the ntfy token back to the browser. */
-function redact(all) {
-  const { token, ...ntfy } = all.ntfy ?? {};
-  return { ...all, ntfy: { ...ntfy, hasToken: Boolean(token) } };
-}
+const userUpdateSchema = z
+  .object({
+    role: z.enum(['admin', 'user']).optional(),
+    household_id: z.coerce.number().int().positive().optional(),
+  })
+  .refine((d) => d.role !== undefined || d.household_id !== undefined, 'Nothing to update');
 
-export function adminRouter({ pool, config, settings, send = sendNtfy }) {
+const USER_COLUMNS = `u.id, u.email, u.display_name, u.role, u.locale, u.created_at,
+  u.household_id, h.name AS household_name`;
+
+/** Instance administration: access settings, users, households. */
+export function adminRouter({ pool, config, settings }) {
   const router = Router();
 
+  async function publicSettings() {
+    const { requireLogin, allowRegistration, anonymousHouseholdId } = await settings.all();
+    return {
+      requireLogin,
+      allowRegistration,
+      anonymousHouseholdId,
+      anonymousModeAllowed: config.allowAnonymousMode,
+    };
+  }
+
   router.get('/settings', async (_req, res) => {
-    res.json({ ...redact(await settings.all()), anonymousModeAllowed: config.allowAnonymousMode });
+    res.json(await publicSettings());
   });
 
   router.put('/settings', async (req, res) => {
     const data = parse(settingsSchema, req.body);
-    if (data.requireLogin === false && !config.allowAnonymousMode) {
-      throw new ApiError(
-        400,
-        'ANONYMOUS_MODE_NOT_ALLOWED',
-        'Set ALLOW_ANONYMOUS_MODE=true on the server first',
-      );
+    if (data.requireLogin === false) {
+      if (!config.allowAnonymousMode) {
+        throw new ApiError(
+          400,
+          'ANONYMOUS_MODE_NOT_ALLOWED',
+          'Set ALLOW_ANONYMOUS_MODE=true on the server first',
+        );
+      }
+      // Anonymous visitors see the household of the admin who opened access.
+      data.anonymousHouseholdId = req.user.household_id;
     }
-    if (data.ntfy) {
-      const current = await settings.get('ntfy');
-      data.ntfy = {
-        ...data.ntfy,
-        token: data.ntfy.token === undefined ? (current?.token ?? '') : data.ntfy.token,
-      };
-    }
-    res.json({
-      ...redact(await settings.set(data)),
-      anonymousModeAllowed: config.allowAnonymousMode,
-    });
-  });
-
-  router.post('/ntfy/test', async (_req, res) => {
-    const ntfy = await settings.get('ntfy');
-    if (!ntfy?.topic) throw new ApiError(400, 'NTFY_NOT_CONFIGURED', 'ntfy is not configured');
-    const locale = (await settings.get('notificationLocale')) || config.defaultLocale;
-    try {
-      await send(ntfy, {
-        title: t(locale, 'test.title'),
-        message: t(locale, 'test.body'),
-        tags: ['tada'],
-      });
-    } catch (err) {
-      throw new ApiError(502, 'NTFY_FAILED', err.message);
-    }
-    res.json({ ok: true });
+    await settings.set(data);
+    res.json(await publicSettings());
   });
 
   router.get('/users', async (_req, res) => {
     const { rows } = await pool.query(
-      'SELECT id, email, display_name, role, locale, created_at FROM users ORDER BY created_at',
+      `SELECT ${USER_COLUMNS} FROM users u JOIN households h ON h.id = u.household_id
+       ORDER BY u.created_at`,
     );
     res.json(rows);
   });
 
-  router.patch('/users/:id', async (req, res) => {
-    const id = parse(idParam, req.params.id);
-    const { role } = parse(z.object({ role: z.enum(['admin', 'user']) }), req.body);
-    if (id === req.user.id && role !== 'admin')
-      throw new ApiError(400, 'CANNOT_DEMOTE_SELF', 'You cannot remove your own admin rights');
+  async function findUser(id) {
     const { rows } = await pool.query(
-      'UPDATE users SET role = $2, updated_at = now() WHERE id = $1 RETURNING id, email, display_name, role, locale, created_at',
-      [id, role],
+      `SELECT ${USER_COLUMNS} FROM users u JOIN households h ON h.id = u.household_id
+       WHERE u.id = $1`,
+      [id],
     );
     if (!rows[0]) throw new ApiError(404, 'USER_NOT_FOUND', 'user not found');
-    res.json(rows[0]);
+    return rows[0];
+  }
+
+  router.patch('/users/:id', async (req, res) => {
+    const id = parse(idParam, req.params.id);
+    const { role, household_id } = parse(userUpdateSchema, req.body);
+    if (id === req.user.id && role !== undefined && role !== 'admin')
+      throw new ApiError(400, 'CANNOT_DEMOTE_SELF', 'You cannot remove your own admin rights');
+    await findUser(id);
+    if (household_id !== undefined) {
+      const { rowCount } = await pool.query('SELECT 1 FROM households WHERE id = $1', [
+        household_id,
+      ]);
+      if (!rowCount) throw new ApiError(404, 'HOUSEHOLD_NOT_FOUND', 'household not found');
+    }
+    await pool.query(
+      `UPDATE users SET role = COALESCE($2, role), household_id = COALESCE($3, household_id),
+         updated_at = now() WHERE id = $1`,
+      [id, role ?? null, household_id ?? null],
+    );
+    res.json(await findUser(id));
   });
 
   router.delete('/users/:id', async (req, res) => {
@@ -107,6 +100,74 @@ export function adminRouter({ pool, config, settings, send = sendNtfy }) {
       throw new ApiError(400, 'CANNOT_DELETE_SELF', 'You cannot delete your own account');
     const { rowCount } = await pool.query('DELETE FROM users WHERE id = $1', [id]);
     if (!rowCount) throw new ApiError(404, 'USER_NOT_FOUND', 'user not found');
+    res.status(204).end();
+  });
+
+  const householdColumns = `h.id, h.name, h.invite_code, h.created_at,
+    (SELECT count(*)::int FROM users u WHERE u.household_id = h.id) AS member_count,
+    (SELECT count(*)::int FROM pets p WHERE p.household_id = h.id) AS pet_count`;
+
+  async function findHousehold(id) {
+    const { rows } = await pool.query(
+      `SELECT ${householdColumns} FROM households h WHERE id = $1`,
+      [id],
+    );
+    if (!rows[0]) throw new ApiError(404, 'HOUSEHOLD_NOT_FOUND', 'household not found');
+    return rows[0];
+  }
+
+  router.get('/households', async (_req, res) => {
+    const { rows } = await pool.query(
+      `SELECT ${householdColumns} FROM households h ORDER BY lower(h.name), h.id`,
+    );
+    res.json(rows);
+  });
+
+  // New, empty household with an invite code, so a new family can join it.
+  router.post('/households', async (req, res) => {
+    const { name } = parse(z.object({ name: householdName }), req.body);
+    const household = await createHousehold(pool, name);
+    await pool.query('UPDATE households SET invite_code = $2 WHERE id = $1', [
+      household.id,
+      newInviteCode(),
+    ]);
+    res.status(201).json(await findHousehold(household.id));
+  });
+
+  router.patch('/households/:id', async (req, res) => {
+    const id = parse(idParam, req.params.id);
+    const { name } = parse(z.object({ name: householdName }), req.body);
+    await findHousehold(id);
+    await pool.query('UPDATE households SET name = $2, updated_at = now() WHERE id = $1', [
+      id,
+      name,
+    ]);
+    res.json(await findHousehold(id));
+  });
+
+  // Deletes a household without members, including all of its pets and data.
+  router.delete('/households/:id', async (req, res) => {
+    const id = parse(idParam, req.params.id);
+    const household = await findHousehold(id);
+    if (household.member_count > 0) {
+      throw new ApiError(409, 'HOUSEHOLD_NOT_EMPTY', 'Move or delete its members first');
+    }
+    const { rows: photos } = await pool.query(
+      'SELECT photo FROM pets WHERE household_id = $1 AND photo IS NOT NULL',
+      [id],
+    );
+    try {
+      await pool.query('DELETE FROM households WHERE id = $1', [id]);
+    } catch (err) {
+      // A member was added concurrently (users reference households RESTRICT).
+      if (err.code === '23503')
+        throw new ApiError(409, 'HOUSEHOLD_NOT_EMPTY', 'Move or delete its members first');
+      throw err;
+    }
+    if ((await settings.get('anonymousHouseholdId')) === id) {
+      await settings.set({ anonymousHouseholdId: null });
+    }
+    for (const { photo } of photos) await removeUpload(config.uploadDir, photo);
     res.status(204).end();
   });
 

@@ -10,10 +10,15 @@ const pool = createPool(config.databaseUrl);
 try {
   await migrate(pool, { log: console.log });
   if (command === 'seed') {
-    const result = await seed(pool, { force: process.argv.includes('--force') });
+    const index = process.argv.indexOf('--household');
+    const householdId = index > 0 ? Number(process.argv[index + 1]) : null;
+    if (householdId !== null && !Number.isInteger(householdId)) {
+      throw new Error('--household needs a numeric household id');
+    }
+    const result = await seed(pool, { force: process.argv.includes('--force'), householdId });
     console.log(result);
   } else if (command !== 'migrate') {
-    console.error('Usage: node src/db/cli.js <migrate|seed> [--force]');
+    console.error('Usage: node src/db/cli.js <migrate|seed> [--force] [--household <id>]');
     process.exitCode = 1;
   }
 } catch (err) {

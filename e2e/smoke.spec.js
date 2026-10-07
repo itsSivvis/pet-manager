@@ -58,7 +58,7 @@ test('theme and language can be switched without reload', async ({ page }) => {
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'neutral-dark');
   await expect(page.locator('meta[name="theme-color"]')).toHaveAttribute('content', '#121417');
 
-  await page.getByLabel('Language').click();
+  await page.getByLabel('Language', { exact: true }).click();
   await page.getByRole('option', { name: 'Deutsch' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
 
@@ -66,4 +66,60 @@ test('theme and language can be switched without reload', async ({ page }) => {
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'neutral-dark');
   await expect(page.getByRole('heading', { level: 1, name: 'Einstellungen' })).toBeVisible();
+});
+
+test('households: invited members share pets, other households do not see them', async ({
+  page,
+  browser,
+}, testInfo) => {
+  const project = testInfo.project.name;
+  const petName = `Testpet ${project}`;
+  await ensureLoggedIn(page);
+  await page.goto('/settings');
+  // The second project finds the link the first one created.
+  const create = page.getByRole('button', { name: 'Create invite link' });
+  await expect(create.or(page.getByLabel('Invite link'))).toBeVisible();
+  if (await create.isVisible()) await create.click();
+  const link = await page.getByLabel('Invite link').inputValue();
+  expect(link).toContain('/register?invite=');
+
+  const register = async (url, { name, email, household }) => {
+    const context = await browser.newContext({ ...testInfo.project.use });
+    await context.addInitScript(() => localStorage.setItem('pm.lang', 'en'));
+    const other = await context.newPage();
+    await other.goto(url);
+    await other.getByLabel('Your name').fill(name);
+    await other.getByLabel('E-mail').fill(email);
+    await other.getByLabel('Password').fill(ADMIN.password);
+    if (household) await other.getByLabel('Household name').fill(household);
+    await other.getByRole('button', { name: 'Register' }).click();
+    await expect(other.getByRole('heading', { level: 1 })).toContainText(/Good|Hello/);
+    await other.goto('/pets');
+    return other;
+  };
+
+  // Joins the admin's household via the invite link (registration is closed).
+  const member = await register(link, {
+    name: 'Invited',
+    email: `invited-${project}@example.com`,
+  });
+  await expect(member.getByText(petName).first()).toBeVisible();
+  await member.context().close();
+
+  // A separate family on the same instance sees none of it.
+  await page.goto('/admin');
+  // Controlled switch: it flips once the server has saved the setting.
+  const registration = page.getByLabel('Allow new registrations');
+  await registration.click();
+  await expect(registration).toBeChecked();
+  const stranger = await register('/register', {
+    name: 'Stranger',
+    email: `stranger-${project}@example.com`,
+    household: 'Other family',
+  });
+  await expect(stranger.getByRole('button', { name: 'Add pet' }).first()).toBeVisible();
+  await expect(stranger.getByText(petName)).toHaveCount(0);
+  await stranger.context().close();
+  await registration.click();
+  await expect(registration).not.toBeChecked();
 });

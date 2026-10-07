@@ -4,8 +4,6 @@ import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
@@ -31,27 +29,11 @@ import { useCatalog } from '../api/hooks.js';
 import { useErrorMessage } from '../lib/useErrorMessage.js';
 import { formatDate, formatNumber } from '../lib/format.js';
 import PageHeader from '../components/PageHeader.jsx';
+import Section from '../components/Section.jsx';
 import QueryState from '../components/QueryState.jsx';
 import FormDialog from '../components/FormDialog.jsx';
 import ConfirmDialog from '../components/ConfirmDialog.jsx';
-
-function Section({ title, description, children }) {
-  return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" component="h2" sx={{ mb: description ? 0 : 2 }}>
-          {title}
-        </Typography>
-        {description && (
-          <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
-            {description}
-          </Typography>
-        )}
-        {children}
-      </CardContent>
-    </Card>
-  );
-}
+import InviteLink from '../components/InviteLink.jsx';
 
 function AccessSection({ settings, save }) {
   const { t } = useTranslation();
@@ -105,97 +87,11 @@ function AccessSection({ settings, save }) {
   );
 }
 
-function NtfySection({ settings, save }) {
-  const { t } = useTranslation();
-  const errorMessage = useErrorMessage();
-  const [form, setForm] = useState({ ...settings.ntfy, token: undefined });
-  const [locale, setLocale] = useState(settings.notificationLocale ?? '');
-  const [msg, setMsg] = useState(null);
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setMsg(null);
-    try {
-      const ntfy = { enabled: form.enabled, url: form.url, topic: form.topic };
-      if (form.token !== undefined) ntfy.token = form.token;
-      const updated = await save({ ntfy, notificationLocale: locale || null });
-      // Show what the server stored (the token itself is never sent back).
-      setForm({ ...updated.ntfy, token: undefined });
-      setMsg({ severity: 'success', text: t('common.saved') });
-    } catch (err) {
-      setMsg({ severity: 'error', text: errorMessage(err) });
-    }
-  };
-  const test = async () => {
-    setMsg(null);
-    try {
-      await post('/admin/ntfy/test');
-      setMsg({ severity: 'success', text: t('admin.ntfy.testSent') });
-    } catch (err) {
-      setMsg({ severity: 'error', text: errorMessage(err) });
-    }
-  };
-
-  return (
-    <Section title={t('admin.ntfy.title')} description={t('admin.ntfy.description')}>
-      <Stack component="form" spacing={2} onSubmit={submit} sx={{ maxWidth: 560 }}>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={Boolean(form.enabled)}
-              onChange={(e) => setForm({ ...form, enabled: e.target.checked })}
-            />
-          }
-          label={t('admin.ntfy.enabled')}
-        />
-        <TextField
-          label={t('admin.ntfy.url')}
-          placeholder="https://ntfy.example.com"
-          value={form.url ?? ''}
-          onChange={(e) => setForm({ ...form, url: e.target.value })}
-          helperText={t('admin.ntfy.urlHint')}
-        />
-        <TextField
-          label={t('admin.ntfy.topic')}
-          placeholder="my-pets-7f3a"
-          value={form.topic ?? ''}
-          onChange={(e) => setForm({ ...form, topic: e.target.value })}
-          helperText={t('admin.ntfy.topicHint')}
-        />
-        <TextField
-          type="password"
-          autoComplete="off"
-          label={t('admin.ntfy.token')}
-          value={form.token ?? ''}
-          placeholder={settings.ntfy.hasToken ? '••••••••' : ''}
-          onChange={(e) => setForm({ ...form, token: e.target.value })}
-          helperText={
-            settings.ntfy.hasToken ? t('admin.ntfy.tokenStored') : t('admin.ntfy.tokenHint')
-          }
-        />
-        <TextField
-          select
-          label={t('admin.ntfy.language')}
-          value={locale}
-          onChange={(e) => setLocale(e.target.value)}
-        >
-          <MenuItem value="">{t('admin.ntfy.languageDefault')}</MenuItem>
-          <MenuItem value="en">English</MenuItem>
-          <MenuItem value="de">Deutsch</MenuItem>
-        </TextField>
-        {msg && <Alert severity={msg.severity}>{msg.text}</Alert>}
-        <Stack direction="row" spacing={1}>
-          <Button type="submit" variant="contained">
-            {t('common.save')}
-          </Button>
-          <Button onClick={test} disabled={!settings.ntfy.topic}>
-            {t('admin.ntfy.test')}
-          </Button>
-        </Stack>
-      </Stack>
-    </Section>
-  );
-}
+const invalidateAdmin = (queryClient) => {
+  // Membership changes affect users, households and – if it was the own
+  // account – every pet query, so refresh everything.
+  queryClient.invalidateQueries();
+};
 
 function UsersSection() {
   const { t } = useTranslation();
@@ -203,15 +99,19 @@ function UsersSection() {
   const queryClient = useQueryClient();
   const errorMessage = useErrorMessage();
   const users = useQuery({ queryKey: ['admin', 'users'], queryFn: () => get('/admin/users') });
+  const households = useQuery({
+    queryKey: ['admin', 'households'],
+    queryFn: () => get('/admin/households'),
+  });
   const [deleting, setDeleting] = useState(null);
-  const changeRole = useMutation({
-    mutationFn: ({ id, role }) => patch(`/admin/users/${id}`, { role }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users'] }),
+  const update = useMutation({
+    mutationFn: ({ id, ...data }) => patch(`/admin/users/${id}`, data),
+    onSuccess: () => invalidateAdmin(queryClient),
   });
 
   return (
     <Section title={t('admin.users.title')}>
-      {changeRole.isError && <Alert severity="error">{errorMessage(changeRole.error)}</Alert>}
+      {update.isError && <Alert severity="error">{errorMessage(update.error)}</Alert>}
       <QueryState query={users}>
         {(list) => (
           <List disablePadding>
@@ -234,24 +134,44 @@ function UsersSection() {
                   )
                 }
               >
-                <ListItemText
-                  primary={u.display_name}
-                  secondary={`${u.email} · ${t('admin.users.since', { date: formatDate(u.created_at) })}`}
-                  sx={{ pr: 2, minWidth: 0 }}
-                  slotProps={{ secondary: { sx: { overflowWrap: 'anywhere' } } }}
-                />
-                <TextField
-                  select
-                  size="small"
-                  value={u.role}
-                  disabled={u.id === me.id}
-                  onChange={(e) => changeRole.mutate({ id: u.id, role: e.target.value })}
-                  sx={{ mr: 6, minWidth: 110 }}
-                  slotProps={{ htmlInput: { 'aria-label': t('admin.users.role') } }}
+                <Stack
+                  direction={{ xs: 'column', md: 'row' }}
+                  spacing={1.5}
+                  sx={{ width: '100%', pr: 6, alignItems: { md: 'center' } }}
                 >
-                  <MenuItem value="user">{t('admin.users.roles.user')}</MenuItem>
-                  <MenuItem value="admin">{t('admin.users.roles.admin')}</MenuItem>
-                </TextField>
+                  <ListItemText
+                    primary={u.display_name}
+                    secondary={`${u.email} · ${t('admin.users.since', { date: formatDate(u.created_at) })}`}
+                    sx={{ minWidth: 0 }}
+                    slotProps={{ secondary: { sx: { overflowWrap: 'anywhere' } } }}
+                  />
+                  <TextField
+                    select
+                    size="small"
+                    value={households.data ? u.household_id : ''}
+                    onChange={(e) => update.mutate({ id: u.id, household_id: e.target.value })}
+                    sx={{ minWidth: 180 }}
+                    slotProps={{ htmlInput: { 'aria-label': t('admin.users.household') } }}
+                  >
+                    {(households.data ?? []).map((h) => (
+                      <MenuItem key={h.id} value={h.id}>
+                        {h.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <TextField
+                    select
+                    size="small"
+                    value={u.role}
+                    disabled={u.id === me.id}
+                    onChange={(e) => update.mutate({ id: u.id, role: e.target.value })}
+                    sx={{ minWidth: 110 }}
+                    slotProps={{ htmlInput: { 'aria-label': t('admin.users.role') } }}
+                  >
+                    <MenuItem value="user">{t('admin.users.roles.user')}</MenuItem>
+                    <MenuItem value="admin">{t('admin.users.roles.admin')}</MenuItem>
+                  </TextField>
+                </Stack>
               </ListItem>
             ))}
           </List>
@@ -264,7 +184,111 @@ function UsersSection() {
         onClose={() => setDeleting(null)}
         onConfirm={async () => {
           await del(`/admin/users/${deleting.id}`);
-          queryClient.invalidateQueries({ queryKey: ['admin', 'users'] });
+          invalidateAdmin(queryClient);
+        }}
+      />
+    </Section>
+  );
+}
+
+function HouseholdsSection() {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const errorMessage = useErrorMessage();
+  const households = useQuery({
+    queryKey: ['admin', 'households'],
+    queryFn: () => get('/admin/households'),
+  });
+  const [editing, setEditing] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [error, setError] = useState(null);
+
+  return (
+    <Section title={t('admin.households.title')} description={t('admin.households.description')}>
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage(error)}
+        </Alert>
+      )}
+      <QueryState query={households}>
+        {(list) => (
+          <List disablePadding>
+            {list.map((h) => (
+              <ListItem key={h.id} disableGutters divider sx={{ display: 'block' }}>
+                <Stack direction="row" sx={{ alignItems: 'center', gap: 1 }}>
+                  <ListItemText
+                    primary={h.name}
+                    secondary={t('admin.households.counts', {
+                      members: h.member_count,
+                      pets: h.pet_count,
+                    })}
+                    sx={{ minWidth: 0 }}
+                  />
+                  <Tooltip title={t('common.edit')}>
+                    <IconButton aria-label={t('common.edit')} onClick={() => setEditing(h)}>
+                      <EditOutlinedIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip
+                    title={h.member_count > 0 ? t('admin.households.notEmpty') : t('common.delete')}
+                  >
+                    <span>
+                      <IconButton
+                        edge="end"
+                        aria-label={t('common.delete')}
+                        disabled={h.member_count > 0}
+                        onClick={() => setDeleting(h)}
+                      >
+                        <DeleteOutlineIcon />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                </Stack>
+                {h.invite_code && (
+                  <Box sx={{ mt: 1, mb: 1 }}>
+                    <InviteLink code={h.invite_code} label={t('household.invite.link')} />
+                  </Box>
+                )}
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </QueryState>
+      <Button
+        variant="contained"
+        startIcon={<AddIcon />}
+        sx={{ mt: 2 }}
+        onClick={() => setEditing('new')}
+      >
+        {t('admin.households.add')}
+      </Button>
+      {editing && (
+        <FormDialog
+          open
+          title={editing === 'new' ? t('admin.households.add') : t('common.edit')}
+          fields={[{ name: 'name', label: t('household.name'), required: true }]}
+          initialValues={editing === 'new' ? {} : editing}
+          onClose={() => setEditing(null)}
+          onSubmit={async ({ name }) => {
+            if (editing === 'new') await post('/admin/households', { name });
+            else await patch(`/admin/households/${editing.id}`, { name });
+            invalidateAdmin(queryClient);
+          }}
+        />
+      )}
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        title={t('admin.households.deleteTitle', { name: deleting?.name })}
+        message={t('admin.households.deleteText', { count: deleting?.pet_count ?? 0 })}
+        onClose={() => setDeleting(null)}
+        onConfirm={async () => {
+          setError(null);
+          try {
+            await del(`/admin/households/${deleting.id}`);
+          } catch (err) {
+            setError(err);
+          }
+          invalidateAdmin(queryClient);
         }}
       />
     </Section>
@@ -434,8 +458,8 @@ export default function Admin() {
         {(s) => (
           <Stack spacing={2.5}>
             <AccessSection settings={s} save={(v) => save(v).catch(() => {})} />
-            <NtfySection settings={s} save={save} />
             <UsersSection />
+            <HouseholdsSection />
             <CatalogSection />
           </Stack>
         )}

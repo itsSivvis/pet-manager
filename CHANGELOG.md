@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Multiple households per instance.** Each household (family) has its own
+  pets, records, dashboard and push notifications; other households cannot
+  see them.
+- Invite links (Settings → Household) let new members join a household, even
+  while open registration is closed.
+- Administration: list, create, rename and delete households; move users
+  between households.
+- `seed` accepts `--household <id>`.
+
+### Changed
+
+- Push notification settings (ntfy, notification language) moved from
+  Administration to **Settings → Push notifications** and are now per
+  household. API: `/api/admin/ntfy/test` → `/api/household/ntfy/test`, ntfy
+  settings via `/api/household/settings`.
+- Open registration now creates a **new, separate household** for each new
+  account. To add family members to your household, use an invite link (or
+  let an admin move the account).
+- Anonymous mode shows the household of the admin who turned off the login
+  requirement.
+
+### Migration
+
+- Existing installations are migrated automatically: all users and pets move
+  into one household, which keeps the previous ntfy settings.
+
 ## [0.1.0] - 2026-10-06
 
 First public release.

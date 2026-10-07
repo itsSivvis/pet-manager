@@ -5,6 +5,8 @@ import { ApiError } from '../lib/errors.js';
 import { parse } from '../lib/validate.js';
 import { checkPasswordPolicy, hashPassword, verifyPassword, dummyHash } from '../lib/password.js';
 import { signToken, isAnonymousModeActive } from '../middleware/auth.js';
+import { withTransaction } from '../db/pool.js';
+import { createHousehold } from '../services/households.js';
 
 const email = z.string().trim().toLowerCase().email().max(254);
 const registerSchema = z.object({
@@ -12,6 +14,10 @@ const registerSchema = z.object({
   password: z.string(),
   display_name: z.string().trim().min(1).max(100),
   locale: z.enum(['en', 'de']).optional(),
+  // Name of the new household (setup / registration without invite).
+  household_name: z.string().trim().min(1).max(100).optional(),
+  // Joins an existing household instead of creating a new one.
+  invite_code: z.string().trim().min(1).max(100).optional(),
 });
 const loginSchema = z.object({ email, password: z.string().min(1).max(1000) });
 const profileSchema = z.object({
@@ -23,12 +29,13 @@ const passwordSchema = z.object({
   new_password: z.string(),
 });
 
-const publicUser = ({ id, email, display_name, role, locale }) => ({
+const publicUser = ({ id, email, display_name, role, locale, household_id }) => ({
   id,
   email,
   display_name,
   role,
   locale,
+  household_id,
 });
 
 export function authRouter({ pool, config, settings, auth }) {
@@ -49,12 +56,15 @@ export function authRouter({ pool, config, settings, auth }) {
     return rows[0].n;
   }
 
+  async function registrationOpen() {
+    return (await userCount()) === 0 || (await settings.get('allowRegistration')) === true;
+  }
+
   // Public: tells the client which screens to show (setup, login, register).
   router.get('/status', async (_req, res) => {
-    const count = await userCount();
     res.json({
-      setupRequired: count === 0,
-      registrationOpen: count === 0 || (await settings.get('allowRegistration')) === true,
+      setupRequired: (await userCount()) === 0,
+      registrationOpen: await registrationOpen(),
       anonymousMode: await isAnonymousModeActive(config, settings),
       anonymousModeAllowed: config.allowAnonymousMode,
     });
@@ -65,26 +75,64 @@ export function authRouter({ pool, config, settings, auth }) {
     const policyError = checkPasswordPolicy(data.password, { email: data.email });
     if (policyError)
       throw new ApiError(400, policyError, 'Password does not meet the requirements');
-
-    const count = await userCount();
-    if (count > 0 && (await settings.get('allowRegistration')) !== true) {
+    if (!data.invite_code && !(await registrationOpen())) {
       throw new ApiError(403, 'REGISTRATION_CLOSED', 'Registration is disabled');
     }
-    // The very first account becomes the administrator.
-    const role = count === 0 ? 'admin' : 'user';
+
     const hash = await hashPassword(data.password);
-    let rows;
-    try {
-      ({ rows } = await pool.query(
-        `INSERT INTO users (email, display_name, password_hash, role, locale)
-         VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-        [data.email, data.display_name, hash, role, data.locale ?? config.defaultLocale],
-      ));
-    } catch (err) {
-      if (err.code === '23505') throw new ApiError(409, 'EMAIL_TAKEN', 'E-mail already registered');
-      throw err;
-    }
-    res.status(201).json({ token: signToken(config, rows[0]), user: publicUser(rows[0]) });
+    const user = await withTransaction(pool, async (client) => {
+      // Serialize registrations so only one account can become the first admin.
+      await client.query('LOCK TABLE users IN SHARE ROW EXCLUSIVE MODE');
+      const { rows: counted } = await client.query('SELECT count(*)::int AS n FROM users');
+      const count = counted[0].n;
+      let householdId;
+      if (count === 0) {
+        // First run: adopt a household that already exists (e.g. demo data
+        // loaded before setup), otherwise create one.
+        const { rows } = await client.query('SELECT id FROM households ORDER BY id LIMIT 1');
+        householdId = rows[0]?.id ?? (await createHousehold(client, 'Household')).id;
+        if (data.household_name) {
+          await client.query('UPDATE households SET name = $2 WHERE id = $1', [
+            householdId,
+            data.household_name,
+          ]);
+        }
+      } else if (data.invite_code) {
+        // A valid invite works even when open registration is disabled.
+        const { rows } = await client.query('SELECT id FROM households WHERE invite_code = $1', [
+          data.invite_code,
+        ]);
+        if (!rows[0]) throw new ApiError(400, 'INVITE_INVALID', 'Invite code is invalid');
+        householdId = rows[0].id;
+      } else {
+        if ((await settings.get('allowRegistration')) !== true) {
+          throw new ApiError(403, 'REGISTRATION_CLOSED', 'Registration is disabled');
+        }
+        householdId = (await createHousehold(client, data.household_name ?? 'Household')).id;
+      }
+      // The very first account becomes the administrator.
+      const role = count === 0 ? 'admin' : 'user';
+      try {
+        const { rows } = await client.query(
+          `INSERT INTO users (email, display_name, password_hash, role, locale, household_id)
+           VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
+          [
+            data.email,
+            data.display_name,
+            hash,
+            role,
+            data.locale ?? config.defaultLocale,
+            householdId,
+          ],
+        );
+        return rows[0];
+      } catch (err) {
+        if (err.code === '23505')
+          throw new ApiError(409, 'EMAIL_TAKEN', 'E-mail already registered');
+        throw err;
+      }
+    });
+    res.status(201).json({ token: signToken(config, user), user: publicUser(user) });
   });
 
   router.post('/login', limiter, async (req, res) => {

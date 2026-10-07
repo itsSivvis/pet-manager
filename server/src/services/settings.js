@@ -1,10 +1,11 @@
 // Instance-wide settings stored in the `settings` table (JSON values).
+// Notification settings are per household, see services/households.js.
 
 export const SETTING_DEFAULTS = {
   requireLogin: true,
   allowRegistration: false,
-  ntfy: { enabled: false, url: 'https://ntfy.sh', topic: '', token: '' },
-  notificationLocale: null, // null = DEFAULT_LOCALE from the environment
+  // Household that anonymous visitors see when the login requirement is off.
+  anonymousHouseholdId: null,
 };
 
 export function createSettingsStore(pool) {

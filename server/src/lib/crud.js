@@ -6,6 +6,9 @@ import { parse, idParam } from './validate.js';
  * Builds a router for a resource that belongs to a pet
  * (mounted at /api/pets/:petId/<resource>).
  *
+ * Every request first checks that the pet belongs to the caller's household,
+ * so data of other households is never readable or writable.
+ *
  * Column names are taken exclusively from the zod schema's keys (a fixed
  * whitelist defined in code); all values are passed as query parameters.
  */
@@ -13,14 +16,18 @@ export function petResourceRouter({ pool, table, schema, orderBy, code }) {
   const router = Router({ mergeParams: true });
   const updateSchema = schema.partial();
 
-  async function assertPet(petId) {
-    const { rowCount } = await pool.query('SELECT 1 FROM pets WHERE id = $1', [petId]);
+  router.use(async (req, _res, next) => {
+    const petId = parse(idParam, req.params.petId);
+    const { rowCount } = await pool.query(
+      'SELECT 1 FROM pets WHERE id = $1 AND household_id = $2',
+      [petId, req.user.household_id],
+    );
     if (!rowCount) throw new ApiError(404, 'PET_NOT_FOUND', 'pet not found');
-  }
+    next();
+  });
 
   router.get('/', async (req, res) => {
     const petId = parse(idParam, req.params.petId);
-    await assertPet(petId);
     const { rows } = await pool.query(
       `SELECT * FROM ${table} WHERE pet_id = $1 ORDER BY ${orderBy}`,
       [petId],
@@ -30,7 +37,6 @@ export function petResourceRouter({ pool, table, schema, orderBy, code }) {
 
   router.post('/', async (req, res) => {
     const petId = parse(idParam, req.params.petId);
-    await assertPet(petId);
     const data = parse(schema, req.body);
     const cols = Object.keys(data);
     const { rows } = await pool.query(

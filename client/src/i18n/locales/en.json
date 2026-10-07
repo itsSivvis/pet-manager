@@ -97,14 +97,19 @@
     },
     "subtitle": {
       "login": "Log in to see your pets.",
-      "register": "Register to manage your pets together.",
+      "register": "Register to manage your pets – in your own household or one you were invited to.",
       "setup": "Create the first account. It will become the administrator."
     },
     "submit": {
       "login": "Log in",
       "register": "Register",
       "setup": "Create administrator account"
-    }
+    },
+    "inviteCode": "Invite code (optional)",
+    "inviteCodeHint": "Got an invite link from your family? The code joins their household.",
+    "householdName": "Household name",
+    "householdNamePlaceholder": "e.g. The Millers",
+    "householdNameHint": "Your pets and records are only visible to members of your household."
   },
   "dashboard": {
     "greetingMorning": "Good morning {{name}}",
@@ -319,19 +324,20 @@
     "license": "Open source under the MIT License",
     "sourceCode": "Source code"
   },
-  "admin": {
-    "title": "Administration",
-    "subtitle": "Settings for this Pet Manager instance.",
-    "access": {
-      "title": "Access & security",
-      "requireLogin": "Require login",
-      "howItWorksTitle": "What happens without a login?",
-      "howItWorks": "When the login requirement is off, anyone who can reach this instance can see and change all pets and records without an account. The administration area always requires an administrator login. Only turn this off on a private network you fully trust.",
-      "envHint": "Turning the login requirement off is disabled on this server. To allow it, the server must be started with",
-      "warningTitle": "Login is currently NOT required",
-      "warning": "Everyone who can reach this instance has full access to all data. Never use this mode on an instance that is reachable from the internet.",
-      "allowRegistration": "Allow new registrations",
-      "allowRegistrationHint": "When off, only the existing accounts can log in. New accounts are always regular users."
+  "household": {
+    "title": "Household",
+    "description": "Everyone in your household sees and manages the same pets. Other households on this server cannot see them.",
+    "name": "Household name",
+    "members": "Members",
+    "invite": {
+      "title": "Invite someone",
+      "description": "Anyone with this link can create an account in your household – even when registration is closed. Only share it with people you trust, and disable it when you no longer need it.",
+      "link": "Invite link",
+      "create": "Create invite link",
+      "renew": "New link",
+      "disable": "Disable link",
+      "copy": "Copy link",
+      "copied": "Copied!"
     },
     "ntfy": {
       "title": "Push notifications (ntfy)",
@@ -348,6 +354,21 @@
       "languageDefault": "Server default",
       "test": "Send test notification",
       "testSent": "Test notification sent."
+    }
+  },
+  "admin": {
+    "title": "Administration",
+    "subtitle": "Settings for this Pet Manager instance.",
+    "access": {
+      "title": "Access & security",
+      "requireLogin": "Require login",
+      "howItWorksTitle": "What happens without a login?",
+      "howItWorks": "When the login requirement is off, anyone who can reach this instance can see and change all pets and records of your household without an account. The administration area always requires an administrator login. Only turn this off on a private network you fully trust.",
+      "envHint": "Turning the login requirement off is disabled on this server. To allow it, the server must be started with",
+      "warningTitle": "Login is currently NOT required",
+      "warning": "Everyone who can reach this instance has full access to all data. Never use this mode on an instance that is reachable from the internet.",
+      "allowRegistration": "Allow new registrations",
+      "allowRegistrationHint": "When on, anyone can register and gets a new, empty household. Invite links work either way. New accounts are always regular users."
     },
     "users": {
       "title": "Users",
@@ -358,11 +379,21 @@
         "admin": "Admin"
       },
       "deleteTitle": "Delete {{name}}?",
-      "deleteText": "The account will be removed. Pets and records are shared and stay available."
+      "deleteText": "The account will be removed. Pets and records belong to the household and stay available to its other members.",
+      "household": "Household"
+    },
+    "households": {
+      "title": "Households",
+      "description": "Each household has its own pets, records and push notifications. Use the invite link to let a new family join an empty household, or move existing users above.",
+      "add": "New household",
+      "counts": "{{members}} member(s) · {{pets}} pet(s)",
+      "notEmpty": "Move or delete its members first",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteText": "The household and all of its {{count}} pet(s) and records will be deleted permanently."
     },
     "catalog": {
       "title": "Catalog",
-      "description": "Foods and medications listed here can be picked quickly in all pets' forms.",
+      "description": "Foods and medications listed here can be picked quickly in all households’ forms.",
       "foods": "Foods",
       "medications": "Medications",
       "brand": "Brand",
@@ -416,6 +447,9 @@
     "ILLNESS_NOT_FOUND": "This illness does not exist (anymore).",
     "ILLNESS_ENTRY_NOT_FOUND": "This entry does not exist (anymore).",
     "USER_NOT_FOUND": "This user does not exist (anymore).",
-    "CATALOG_ITEM_NOT_FOUND": "This catalog item does not exist (anymore)."
+    "CATALOG_ITEM_NOT_FOUND": "This catalog item does not exist (anymore).",
+    "INVITE_INVALID": "This invite code is invalid or no longer active.",
+    "HOUSEHOLD_NOT_FOUND": "This household does not exist (anymore).",
+    "HOUSEHOLD_NOT_EMPTY": "The household still has members. Move or delete them first."
   }
 }

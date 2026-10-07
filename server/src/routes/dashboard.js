@@ -10,7 +10,8 @@ import {
 export function dashboardRouter({ pool, config }) {
   const router = Router();
 
-  router.get('/', async (_req, res) => {
+  router.get('/', async (req, res) => {
+    const household = req.user.household_id;
     const tz = config.timezone;
     const now = new Date();
     const today = todayIn(tz, now);
@@ -19,25 +20,40 @@ export function dashboardRouter({ pool, config }) {
 
     const [pets, meds, doses, appts, prevention, illnesses] = await Promise.all([
       pool.query(
-        'SELECT id, name, species, photo FROM pets WHERE NOT archived ORDER BY lower(name)',
+        `SELECT id, name, species, photo FROM pets
+         WHERE household_id = $1 AND NOT archived ORDER BY lower(name)`,
+        [household],
       ),
       pool.query(
         `SELECT m.*, p.name AS pet_name, p.species FROM medications m JOIN pets p ON p.id = m.pet_id
-                  WHERE NOT p.archived AND (m.end_date IS NULL OR m.end_date >= $1)`,
-        [today],
+         WHERE p.household_id = $1 AND NOT p.archived AND (m.end_date IS NULL OR m.end_date >= $2)`,
+        [household, today],
       ),
-      pool.query(`SELECT medication_id, given_at FROM medication_doses WHERE given_at >= $1`, [
-        startOfDay,
-      ]),
-      pool.query(`SELECT a.*, p.name AS pet_name, p.species FROM appointments a JOIN pets p ON p.id = a.pet_id
-                  WHERE NOT a.done AND a.starts_at >= now() - interval '1 hour'
-                    AND a.starts_at < now() + interval '30 days'
-                  ORDER BY a.starts_at LIMIT 10`),
-      pool.query(`SELECT i.*, p.name AS pet_name, p.species FROM prevention_items i JOIN pets p ON p.id = i.pet_id
-                  WHERE NOT p.archived`),
-      pool.query(`SELECT i.id, i.pet_id, i.title, i.status, i.started_on, p.name AS pet_name, p.species
-                  FROM illnesses i JOIN pets p ON p.id = i.pet_id
-                  WHERE i.status <> 'resolved' AND NOT p.archived ORDER BY i.started_on DESC`),
+      pool.query(
+        `SELECT d.medication_id, d.given_at FROM medication_doses d
+         JOIN medications m ON m.id = d.medication_id JOIN pets p ON p.id = m.pet_id
+         WHERE p.household_id = $1 AND d.given_at >= $2`,
+        [household, startOfDay],
+      ),
+      pool.query(
+        `SELECT a.*, p.name AS pet_name, p.species FROM appointments a JOIN pets p ON p.id = a.pet_id
+         WHERE p.household_id = $1 AND NOT a.done AND a.starts_at >= now() - interval '1 hour'
+           AND a.starts_at < now() + interval '30 days'
+         ORDER BY a.starts_at LIMIT 10`,
+        [household],
+      ),
+      pool.query(
+        `SELECT i.*, p.name AS pet_name, p.species FROM prevention_items i JOIN pets p ON p.id = i.pet_id
+         WHERE p.household_id = $1 AND NOT p.archived`,
+        [household],
+      ),
+      pool.query(
+        `SELECT i.id, i.pet_id, i.title, i.status, i.started_on, p.name AS pet_name, p.species
+         FROM illnesses i JOIN pets p ON p.id = i.pet_id
+         WHERE p.household_id = $1 AND i.status <> 'resolved' AND NOT p.archived
+         ORDER BY i.started_on DESC`,
+        [household],
+      ),
     ]);
 
     // Doses due from 12 hours ago until 24 hours ahead, with "given" status.
